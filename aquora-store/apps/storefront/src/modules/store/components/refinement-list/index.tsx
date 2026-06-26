@@ -9,6 +9,8 @@ import {
 } from "@lib/util/product-option-filters"
 import OptionsPicker from "./options-picker"
 import SortProducts, { SortOptions } from "./sort-products"
+import { categories } from "@lib/aquora/categories"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type RefinementListProps = {
   sortBy: SortOptions
@@ -76,6 +78,24 @@ const RefinementList = ({
           setOptionValueIds={setOptionValueIds}
         />
       )}
+      <div className="flex flex-col gap-y-3">
+        <span className="text-sm font-semibold text-aquora-ink">Shop by category</span>
+        <ul className="flex flex-col gap-y-1.5">
+          {categories.map((c) => (
+            <li key={c.handle}>
+              <LocalizedClientLink
+                href={`/categories/${c.handle}`}
+                className="text-sm text-aquora-muted hover:text-aquora-primary transition-colors duration-150"
+              >
+                {c.name}
+              </LocalizedClientLink>
+            </li>
+          ))}
+        </ul>
+        <LocalizedClientLink href="/brands" className="text-sm font-medium text-aquora-primary hover:underline">
+          Browse by brand →
+        </LocalizedClientLink>
+      </div>
     </div>
   )
 }
