@@ -20,7 +20,8 @@ type State = { q: string; brand: string[]; cat: string[]; price: string; page: n
 
 async function runSearch(state: State): Promise<SearchResponse> {
   const empty: SearchResponse = { products: [], facets: {}, total: 0, page: 1, pageSize: 24 }
-  if (!state.q) return empty
+  const browse = !state.q && (state.cat.length > 0 || state.brand.length > 0 || !!state.price)
+  if (!state.q && !browse) return empty
   const base = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
   const key = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
   const p = new URLSearchParams({ q: state.q, page: String(state.page) })
@@ -104,7 +105,15 @@ function FacetGroup({
   )
 }
 
-function FilterPanel({ state, facets }: { state: State; facets: SearchResponse["facets"] }) {
+function FilterPanel({
+  state,
+  facets,
+  showCategory = true,
+}: {
+  state: State
+  facets: SearchResponse["facets"]
+  showCategory?: boolean
+}) {
   const base = { ...state, page: 1 }
   return (
     <div>
@@ -114,12 +123,14 @@ function FilterPanel({ state, facets }: { state: State; facets: SearchResponse["
         selected={state.brand}
         hrefFor={(v) => makeHref({ ...base, brand: toggle(state.brand, v) })}
       />
-      <FacetGroup
-        title="Category"
-        options={facets.categories || []}
-        selected={state.cat}
-        hrefFor={(v) => makeHref({ ...base, cat: toggle(state.cat, v) })}
-      />
+      {showCategory && (
+        <FacetGroup
+          title="Category"
+          options={facets.categories || []}
+          selected={state.cat}
+          hrefFor={(v) => makeHref({ ...base, cat: toggle(state.cat, v) })}
+        />
+      )}
       <FacetGroup
         title="Price"
         options={facets.price || []}
@@ -146,12 +157,17 @@ export default async function SearchPage(props: {
   const { products, facets, total } = data
   const pageSize = data.pageSize || 24
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const hasFilters = state.brand.length > 0 || state.cat.length > 0 || !!state.price
+  // Browse mode = no search term but a category/brand/price scope (e.g. arrived from a
+  // category page). The category is the fixed scope, so we don't expose it as a facet/chip.
+  const isBrowse = !state.q && (state.cat.length > 0 || state.brand.length > 0 || !!state.price)
+  const browseScoped = !state.q && state.cat.length > 0
+  const browseLabel = state.cat.length === 1 ? state.cat[0] : "Catalogue"
+  const hasFilters = state.brand.length > 0 || !!state.price || (!browseScoped && state.cat.length > 0)
 
   // Active-filter chips (each links to the state with that filter removed).
   const chips: { label: string; href: string }[] = []
   for (const b of state.brand) chips.push({ label: b, href: makeHref({ ...state, page: 1, brand: state.brand.filter((x) => x !== b) }) })
-  for (const c of state.cat) chips.push({ label: c, href: makeHref({ ...state, page: 1, cat: state.cat.filter((x) => x !== c) }) })
+  if (!browseScoped) for (const c of state.cat) chips.push({ label: c, href: makeHref({ ...state, page: 1, cat: state.cat.filter((x) => x !== c) }) })
   if (state.price) {
     const pl = (facets.price || []).find((p) => p.value === state.price)?.label || state.price
     chips.push({ label: pl, href: makeHref({ ...state, page: 1, price: "" }) })
@@ -159,22 +175,24 @@ export default async function SearchPage(props: {
 
   return (
     <div className="content-container py-12 small:py-16">
-      <p className="text-aquora-accent text-xs font-semibold uppercase tracking-widest mb-2">Catalogue search</p>
+      <p className="text-aquora-accent text-xs font-semibold uppercase tracking-widest mb-2">
+        {isBrowse ? "Browse" : "Catalogue search"}
+      </p>
       <h1 className="font-heading text-[32px] leading-tight text-aquora-ink mb-1">
-        {state.q ? <>Results for “{state.q}”</> : "Search the catalogue"}
+        {state.q ? <>Results for “{state.q}”</> : isBrowse ? browseLabel : "Search the catalogue"}
       </h1>
       <p className="text-aquora-muted mb-8">
-        {state.q
-          ? `${total.toLocaleString("en-AE")} product${total === 1 ? "" : "s"} found`
+        {state.q || isBrowse
+          ? `${total.toLocaleString("en-AE")} product${total === 1 ? "" : "s"}`
           : "Search across our full pool, spa, pond & fountain equipment range."}
       </p>
 
-      {state.q && (
+      {(state.q || isBrowse) && (
         <div className="flex flex-col small:flex-row gap-8 small:gap-10">
           {/* Sidebar — desktop */}
           {(facets.brands?.length || facets.categories?.length || facets.price?.length) ? (
             <aside className="hidden small:block w-60 shrink-0">
-              <FilterPanel state={state} facets={facets} />
+              <FilterPanel state={state} facets={facets} showCategory={!browseScoped} />
             </aside>
           ) : null}
 
@@ -184,7 +202,7 @@ export default async function SearchPage(props: {
               <details className="small:hidden mb-6 rounded-large border border-black/10 p-4">
                 <summary className="text-sm font-semibold text-aquora-ink cursor-pointer">Filters</summary>
                 <div className="mt-4">
-                  <FilterPanel state={state} facets={facets} />
+                  <FilterPanel state={state} facets={facets} showCategory={!browseScoped} />
                 </div>
               </details>
             ) : null}

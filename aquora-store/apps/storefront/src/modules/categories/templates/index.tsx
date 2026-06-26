@@ -66,6 +66,15 @@ export default function CategoryTemplate({
             ))}
           <h1 data-testid="category-page-title">{category.name}</h1>
         </div>
+        <LocalizedClientLink
+          href={`/search?cat=${encodeURIComponent(category.name)}`}
+          className="inline-flex items-center gap-2 mb-6 text-sm font-semibold text-aquora-primary hover:underline"
+        >
+          Filter by brand &amp; price
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M3 8h10M9 4l4 4-4 4" />
+          </svg>
+        </LocalizedClientLink>
         {category.description && (
           <div className="mb-8 text-base-regular">
             <p>{category.description}</p>

@@ -25,10 +25,6 @@ function sanitizeFacet(s: string): string {
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = (req.query.q || "").toString().trim();
-  if (!query) {
-    res.json({ products: [], facets: {}, total: 0, page: 1, pageSize: PAGE_SIZE, source: "none" });
-    return;
-  }
 
   const graph = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const productService = req.scope.resolve(Modules.PRODUCT);
@@ -38,6 +34,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const cats = parseList(req.query.cat).map(sanitizeFacet).filter(Boolean);
   const priceKey = (req.query.price || "").toString().trim();
   const band = PRICE_BANDS.find((b) => b.key === priceKey);
+
+  // Browse mode: no search term, but a category/brand/price scope is present (Retail
+  // supports an empty query + filter as a browse request). Powers faceted category pages.
+  const browse = !query && (cats.length > 0 || brands.length > 0 || !!band);
+  if (!query && !browse) {
+    res.json({ products: [], facets: {}, total: 0, page: 1, pageSize: PAGE_SIZE, source: "none" });
+    return;
+  }
 
   // Build the Retail filter expression from the active facet selections.
   const parts: string[] = [];
@@ -117,7 +121,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // so a shopper's brand/category/price selections are still honoured during an outage.
     source = "medusa";
     const words = query.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w));
-    const terms = words.length ? words.slice(0, 4) : [query.toLowerCase()];
+    const terms = words.length ? words.slice(0, 4) : query ? [query.toLowerCase()] : [];
     const score = new Map<string, { h: string; n: number }>();
     for (const t of terms) {
       try {
