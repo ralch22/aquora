@@ -69,10 +69,11 @@ export default async function syncRetail({ container }: { container: MedusaConta
     const products = (data as any[]).map((p) => {
       const img = p.thumbnail || p.images?.[0]?.url;
       const price = Number(p.variants?.[0]?.calculated_price?.calculated_amount || 0);
+      const catNames = (p.categories || []).map((c: any) => c.name).filter(Boolean).slice(0, 5);
       return {
         id: p.handle,
         title: (p.title || "Product").slice(0, 1000),
-        categories: [p.categories?.[0]?.name || "Pool & Spa Equipment"],
+        categories: catNames.length ? catNames : ["Pool & Spa Equipment"],
         uri: `https://aquora.ae/products/${p.handle}`,
         availability: "IN_STOCK",
         ...(p.metadata?.brand ? { brands: [String(p.metadata.brand)] } : {}),
