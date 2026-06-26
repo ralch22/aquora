@@ -14,6 +14,7 @@ type Message = {
   role: "user" | "assistant"
   text: string
   suggestions?: Suggestion[]
+  image?: string
 }
 
 const GREETING: Message = {
@@ -71,6 +72,13 @@ const SendIcon = () => (
   </svg>
 )
 
+const CameraIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+)
+
 const AiAssistant = () => {
   const params = useParams()
   const countryCode =
@@ -80,9 +88,21 @@ const AiAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([GREETING])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [image, setImage] = useState<{ dataUrl: string; mime: string } | null>(null)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    if (file.size > 6 * 1024 * 1024) return
+    const reader = new FileReader()
+    reader.onload = () => setImage({ dataUrl: String(reader.result), mime: file.type || "image/jpeg" })
+    reader.readAsDataURL(file)
+  }
 
   // Auto-scroll to the latest message
   useEffect(() => {
@@ -110,13 +130,24 @@ const AiAssistant = () => {
 
   const sendMessage = async () => {
     const message = input.trim()
-    if (!message || loading) return
+    if ((!message && !image) || loading) return
 
-    setMessages((prev) => [...prev, { role: "user", text: message }])
+    const sentImage = image
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: message || (sentImage ? "What is this? Do you have it?" : ""), image: sentImage?.dataUrl },
+    ])
     setInput("")
+    setImage(null)
     setLoading(true)
 
     try {
+      const reqBody: { message?: string; imageBase64?: string; mimeType?: string } = {}
+      if (message) reqBody.message = message
+      if (sentImage) {
+        reqBody.imageBase64 = sentImage.dataUrl.replace(/^data:[^,]+,/, "")
+        reqBody.mimeType = sentImage.mime
+      }
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/assistant`,
         {
@@ -126,7 +157,7 @@ const AiAssistant = () => {
             "x-publishable-api-key":
               process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify(reqBody),
         }
       )
 
@@ -229,6 +260,14 @@ const AiAssistant = () => {
                       : "max-w-[88%] rounded-large rounded-bl-sm border border-black/5 bg-white px-3.5 py-2 text-sm leading-relaxed text-aquora-ink shadow-sm"
                   }
                 >
+                  {msg.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={msg.image}
+                      alt="Attached"
+                      className="mb-1.5 max-h-32 w-auto rounded-rounded object-cover"
+                    />
+                  )}
                   {msg.text}
                 </div>
 
@@ -271,14 +310,35 @@ const AiAssistant = () => {
 
           {/* Footer / input */}
           <div className="border-t border-black/5 bg-white px-3 py-3">
+            {image && (
+              <div className="mb-2 flex items-center gap-2 rounded-large border border-black/5 bg-aquora-surface p-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image.dataUrl} alt="To send" className="h-10 w-10 rounded-rounded object-cover" />
+                <span className="flex-1 text-xs text-aquora-muted">Photo attached — send to identify it.</span>
+                <button type="button" onClick={() => setImage(null)} aria-label="Remove photo" className="flex h-6 w-6 items-center justify-center rounded-full text-aquora-muted transition hover:bg-black/5">
+                  <CloseIcon />
+                </button>
+              </div>
+            )}
             <div className="flex items-end gap-2">
+              <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPickFile} className="hidden" />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={loading}
+                aria-label="Attach a photo to search"
+                title="Search by photo"
+                className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-large border border-aquora-muted/30 text-aquora-muted transition hover:border-aquora-primary hover:text-aquora-primary disabled:opacity-50"
+              >
+                <CameraIcon />
+              </button>
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Ask about pumps, filters, heating…"
+                placeholder="Ask, or attach a photo…"
                 aria-label="Message Aqua"
                 disabled={loading}
                 className="min-w-0 flex-1 rounded-large border border-aquora-muted/30 bg-aquora-surface px-3 py-2 text-sm text-aquora-ink outline-none transition placeholder:text-aquora-muted focus:border-aquora-primary disabled:opacity-60"
@@ -286,7 +346,7 @@ const AiAssistant = () => {
               <button
                 type="button"
                 onClick={sendMessage}
-                disabled={loading || !input.trim()}
+                disabled={loading || (!input.trim() && !image)}
                 aria-label="Send message"
                 className="btn-primary flex h-[38px] w-[38px] shrink-0 items-center justify-center !rounded-large !p-0 disabled:cursor-not-allowed disabled:opacity-50"
               >

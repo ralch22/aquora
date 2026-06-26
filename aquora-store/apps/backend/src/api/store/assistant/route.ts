@@ -35,9 +35,10 @@ const TOOLS = [{
 type Sugg = { title: string; handle: string; category: string | null };
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const body = (req.body || {}) as { message?: string; imageBase64?: string; history?: any[] };
+  const body = (req.body || {}) as { message?: string; imageBase64?: string; mimeType?: string; history?: any[] };
   const message = (body.message || "").toString().trim();
   const imageBase64 = (body.imageBase64 || "").toString().replace(/^data:[^,]+,/, "");
+  const mimeType = (body.mimeType || "image/jpeg").toString();
   if (!message && !imageBase64) { res.status(400).json({ error: "Provide 'message' and/or 'imageBase64'." }); return; }
   if (imageBase64.length > 9_000_000) { res.status(413).json({ error: "Image too large (max ~6MB)." }); return; }
   if (message.length > 2000) { res.status(413).json({ error: "Message too long." }); return; }
@@ -89,7 +90,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ inlineData: { mimeType: "image/jpeg", data: b64 } }, { text: "This is a photo of pool, spa, pond or fountain equipment. Reply with ONLY 2-4 short product-search keywords (e.g. \"sand filter\", \"robotic cleaner\", \"heat pump\", \"LED light\"), comma-separated. No other text." }] }],
+          contents: [{ role: "user", parts: [{ inlineData: { mimeType, data: b64 } }, { text: "This is a photo of pool, spa, pond or fountain equipment. Reply with ONLY 2-4 short product-search keywords (e.g. \"sand filter\", \"robotic cleaner\", \"heat pump\", \"LED light\"), comma-separated. No other text." }] }],
           generationConfig: { temperature: 0.2, maxOutputTokens: 40 },
         }),
       });
@@ -119,7 +120,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const token = await getAccessToken(); // Rami-scoped token (drift-proof, not ADC)
     const ctx = suggestions.slice(0, 8).map((s, i) => `${i + 1}. ${s.title}${s.category ? ` [${s.category}]` : ""} (/products/${s.handle})`).join("\n");
     const userParts: any[] = [];
-    if (imageBase64) userParts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64 } });
+    if (imageBase64) userParts.push({ inlineData: { mimeType, data: imageBase64 } });
     userParts.push({ text: `Customer: ${message || "Find products like the attached photo."}\n\nRelevant Aquora catalogue items:\n${ctx || "(no close matches found)"}\n\nRecommend the most suitable items by name and explain briefly why they fit. If nothing fits, suggest a free consultation. Be concise.` });
     const url = `https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${LOCATION}/publishers/google/models/${MODEL}:generateContent`;
     const r = await fetch(url, {
