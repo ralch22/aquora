@@ -39,6 +39,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const message = (body.message || "").toString().trim();
   const imageBase64 = (body.imageBase64 || "").toString().replace(/^data:[^,]+,/, "");
   if (!message && !imageBase64) { res.status(400).json({ error: "Provide 'message' and/or 'imageBase64'." }); return; }
+  if (imageBase64.length > 9_000_000) { res.status(413).json({ error: "Image too large (max ~6MB)." }); return; }
+  if (message.length > 2000) { res.status(413).json({ error: "Message too long." }); return; }
 
   const productService = req.scope.resolve(Modules.PRODUCT);
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
@@ -52,7 +54,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const score = new Map<string, { p: any; n: number }>();
     for (const t of terms) {
       try {
-        const products = await productService.listProducts({ q: t } as any, { take: 12 } as any);
+        const products = await productService.listProducts({ q: t, status: "published" } as any, { take: 12 } as any);
         for (const p of products) { const e = score.get(p.id) || { p, n: 0 }; e.n++; score.set(p.id, e); }
       } catch {}
     }

@@ -8,6 +8,7 @@ import { categories } from "@lib/aquora/categories"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import SearchBox from "@modules/layout/components/search-box"
 
 export default async function Nav() {
   const [regions, locales, currentLocale] = await Promise.all([
@@ -138,8 +139,9 @@ export default async function Nav() {
           </div>
 
           {/* Right: account + cart */}
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-6 h-full">
+          <div className="flex items-center gap-x-5 h-full flex-1 basis-0 justify-end">
+            <SearchBox className="hidden small:block" />
+            <div className="hidden small:flex items-center gap-x-5 h-full">
               <LocalizedClientLink
                 className="font-medium text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150"
                 href="/account"
