@@ -35,6 +35,19 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const priceKey = (req.query.price || "").toString().trim();
   const band = PRICE_BANDS.find((b) => b.key === priceKey);
 
+  // Sort. Retail orderBy is unreliable on this catalogue, so non-relevance sorts are
+  // applied route-side over the top SORT_CAP results (exact for typical browse sizes).
+  const sort = (req.query.sort || "relevance").toString();
+  const SORTED = sort === "price-asc" || sort === "price-desc" || sort === "name-asc";
+  const SORT_CAP = 250;
+  const sortCards = (cards: any[]) => {
+    const c = [...cards];
+    if (sort === "price-asc") c.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+    else if (sort === "price-desc") c.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+    else if (sort === "name-asc") c.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    return c;
+  };
+
   // Browse mode: no search term, but a category/brand/price scope is present (Retail
   // supports an empty query + filter as a browse request). Powers faceted category pages.
   const browse = !query && (cats.length > 0 || brands.length > 0 || !!band);
@@ -89,10 +102,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   let facetsOut: Record<string, any[]> = {};
   let products: any[] = [];
 
+  const visitorId = (req.query.v || "anon").toString();
   const retail = await retailSearch(query, {
-    visitorId: (req.query.v || "anon").toString(),
-    pageSize: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
+    visitorId,
+    pageSize: SORTED ? 100 : PAGE_SIZE,
+    offset: SORTED ? 0 : (page - 1) * PAGE_SIZE,
     filter,
   });
 
@@ -115,7 +129,20 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         facetsOut[name] = f.values.map((v) => ({ value: v.value, label: v.value, count: v.count }));
       }
     }
-    products = await buildCards(retail.ids);
+    if (!SORTED) {
+      products = await buildCards(retail.ids);
+    } else {
+      // Collect up to SORT_CAP relevance-ranked ids, hydrate, sort route-side, paginate.
+      const ids = [...retail.ids];
+      for (let off = 100; off < Math.min(total, SORT_CAP); off += 100) {
+        const more = await retailSearch(query, { visitorId, pageSize: 100, offset: off, filter });
+        if (!more || !more.ids.length) break;
+        ids.push(...more.ids);
+      }
+      const sorted = sortCards(await buildCards(ids));
+      total = sorted.length;
+      products = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    }
   } else {
     // Retail unavailable → tokenized Medusa fallback that RE-APPLIES the active facets,
     // so a shopper's brand/category/price selections are still honoured during an outage.
@@ -138,6 +165,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     if (brands.length) cards = cards.filter((c) => c.brand && brands.includes(c.brand));
     if (cats.length) cards = cards.filter((c) => c.category && cats.includes(c.category));
     if (band) cards = cards.filter((c) => c.price != null && c.price >= band.min && (band.max === undefined || c.price < band.max));
+    if (SORTED) cards = sortCards(cards);
     total = cards.length;
     products = cards.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   }

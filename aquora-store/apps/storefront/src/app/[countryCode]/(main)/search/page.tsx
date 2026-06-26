@@ -16,7 +16,14 @@ type SearchResponse = {
   source?: string
 }
 
-type State = { q: string; brand: string[]; cat: string[]; price: string; page: number }
+type State = { q: string; brand: string[]; cat: string[]; price: string; page: number; sort: string }
+
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: "relevance", label: "Relevance" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "name-asc", label: "Name: A–Z" },
+]
 
 async function runSearch(state: State): Promise<SearchResponse> {
   const empty: SearchResponse = { products: [], facets: {}, total: 0, page: 1, pageSize: 24 }
@@ -28,6 +35,7 @@ async function runSearch(state: State): Promise<SearchResponse> {
   if (state.brand.length) p.set("brand", state.brand.join(","))
   if (state.cat.length) p.set("cat", state.cat.join(","))
   if (state.price) p.set("price", state.price)
+  if (state.sort && state.sort !== "relevance") p.set("sort", state.sort)
   try {
     const r = await fetch(`${base}/store/search?${p.toString()}`, {
       headers: { "x-publishable-api-key": key },
@@ -46,6 +54,7 @@ function makeHref(s: State): string {
   if (s.brand.length) p.set("brand", s.brand.join(","))
   if (s.cat.length) p.set("cat", s.cat.join(","))
   if (s.price) p.set("price", s.price)
+  if (s.sort && s.sort !== "relevance") p.set("sort", s.sort)
   if (s.page > 1) p.set("page", String(s.page))
   const str = p.toString()
   return `/search${str ? `?${str}` : ""}`
@@ -142,7 +151,7 @@ function FilterPanel({
 }
 
 export default async function SearchPage(props: {
-  searchParams: Promise<{ q?: string; brand?: string; cat?: string; price?: string; page?: string }>
+  searchParams: Promise<{ q?: string; brand?: string; cat?: string; price?: string; page?: string; sort?: string }>
 }) {
   const sp = await props.searchParams
   const state: State = {
@@ -151,6 +160,7 @@ export default async function SearchPage(props: {
     cat: (sp.cat || "").split(",").map((s) => s.trim()).filter(Boolean),
     price: (sp.price || "").trim(),
     page: Math.max(1, parseInt(sp.page || "1", 10) || 1),
+    sort: (sp.sort || "relevance").trim(),
   }
 
   const data = await runSearch(state)
@@ -181,11 +191,39 @@ export default async function SearchPage(props: {
       <h1 className="font-heading text-[32px] leading-tight text-aquora-ink mb-1">
         {state.q ? <>Results for “{state.q}”</> : isBrowse ? browseLabel : "Search the catalogue"}
       </h1>
-      <p className="text-aquora-muted mb-8">
-        {state.q || isBrowse
-          ? `${total.toLocaleString("en-AE")} product${total === 1 ? "" : "s"}`
-          : "Search across our full pool, spa, pond & fountain equipment range."}
-      </p>
+      <div className="flex items-center justify-between gap-4 mb-8">
+        <p className="text-aquora-muted">
+          {state.q || isBrowse
+            ? `${total.toLocaleString("en-AE")} product${total === 1 ? "" : "s"}`
+            : "Search across our full pool, spa, pond & fountain equipment range."}
+        </p>
+        {(state.q || isBrowse) && (
+          <details className="relative shrink-0">
+            <summary className="list-none cursor-pointer flex items-center gap-1.5 text-sm font-medium text-aquora-ink rounded-md border border-black/10 px-3 py-1.5 hover:border-aquora-primary transition-colors [&::-webkit-details-marker]:hidden">
+              <span className="text-aquora-muted">Sort:</span>
+              {SORT_OPTIONS.find((o) => o.value === state.sort)?.label || "Relevance"}
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="ml-0.5" aria-hidden>
+                <path d="M1.5 3.5L5 7L8.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="absolute right-0 z-20 mt-2 w-56 rounded-large border border-black/10 bg-white shadow-lg p-1">
+              {SORT_OPTIONS.map((o) => (
+                <LocalizedClientLink
+                  key={o.value}
+                  href={makeHref({ ...state, page: 1, sort: o.value })}
+                  className={`block rounded-md px-3 py-2 text-sm transition-colors ${
+                    o.value === state.sort
+                      ? "bg-aquora-primary/5 text-aquora-primary font-semibold"
+                      : "text-aquora-ink hover:bg-black/[0.03]"
+                  }`}
+                >
+                  {o.label}
+                </LocalizedClientLink>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
 
       {(state.q || isBrowse) && (
         <div className="flex flex-col small:flex-row gap-8 small:gap-10">
