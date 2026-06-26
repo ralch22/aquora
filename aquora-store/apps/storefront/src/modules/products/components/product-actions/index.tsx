@@ -38,6 +38,7 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -137,7 +138,7 @@ export default function ProductActions({
 
     await addToCart({
       variantId: selectedVariant.id,
-      quantity: 1,
+      quantity,
       countryCode,
     })
 
@@ -170,6 +171,35 @@ export default function ProductActions({
         </div>
 
         <ProductPrice product={product} variant={selectedVariant} />
+
+        {selectedVariant && inStock && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-ui-fg-muted">Quantity</span>
+            <div className="inline-flex items-center rounded-md border border-black/15">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                disabled={quantity <= 1 || isAdding}
+                aria-label="Decrease quantity"
+                className="h-9 w-9 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+              >
+                −
+              </button>
+              <span className="w-10 text-center text-sm font-medium tabular-nums" aria-live="polite">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                disabled={quantity >= 99 || isAdding}
+                aria-label="Increase quantity"
+                className="h-9 w-9 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
 
         <Button
           onClick={handleAddToCart}
