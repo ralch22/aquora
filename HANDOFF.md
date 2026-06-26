@@ -16,7 +16,7 @@ Aquora is a production-grade, AI-powered headless e-commerce platform for **pool
 | Admin | https://aquora-backend-250350263461.europe-west1.run.app/app · `admin@aquora.ae` / `Aquora!2026` |
 | Backend API | https://aquora-backend-250350263461.europe-west1.run.app |
 
-Verified live: catalogue renders · Retail semantic search (`source:retail`) · faceted browse + sort · PDP specs · **Ask Aqua AI assistant returns grounded product cards in-browser**.
+Verified live: catalogue renders · Retail semantic search (`source:retail`) · **real source category taxonomy** (75 categories: 32 top + 43 sub) powering nav + faceted browse + sort · PDP specs · **Ask Aqua assistant — text, photo AND voice** (Google Speech-to-Text input + spoken replies) returning grounded product cards in-browser.
 
 **Infra (europe-west1):** Cloud Run `aquora-backend` (2Gi/2cpu, min-1, Cloud SQL socket + SA token for Vertex/Retail) + `aquora-storefront` (1Gi, min-1) → Cloud SQL Postgres 16 `aquora-db` (db-g1-small, ENTERPRISE). Images in Artifact Registry `aquora`. Build: `gcloud builds submit apps/<svc> --tag …/aquora/<svc>:v1 --machine-type=e2-highcpu-8` then `gcloud run deploy`.
 
@@ -33,7 +33,8 @@ Verified live: catalogue renders · Retail semantic search (`source:retail`) · 
 | Full catalogue (5,935) + images | GCS `emerge-aquora-products`, Medusa | AED prices, 17 categories, 57 brands |
 | **Google Retail semantic search** | `lib/retail.ts`, `/store/search` | `source:"retail"`; Medusa tokenized fallback |
 | **Faceted search + category browse** | `/store/search`, `search/page.tsx` | brand/category/price, multi-select, **sort**, pagination, browse mode (empty q + scope) |
-| **Multimodal AI assistant ("Ask Aqua")** | `/store/assistant`, `ai-assistant` | Gemini 2.5 Flash (Vertex), RAG-grounded, text + photo |
+| **Multimodal AI assistant ("Ask Aqua")** | `/store/assistant`, `ai-assistant` | Gemini 2.5 Flash (Vertex), RAG-grounded, **text · photo · voice** (Cloud Speech-to-Text in, spoken replies out) |
+| **Real category taxonomy** | `scrape-categories.mjs`, `import-categories.ts` | 75 source categories (32 top + 43 sub), browse at both levels |
 | **PDP** | `products/templates` | breadcrumb · brand · spec table · trust strip · WhatsApp · quantity stepper · related |
 | **Cart / checkout conversion** | `cart`, `checkout` | free-delivery progress, assurance panel, manual payment |
 | **SEO** | sitewide + per-page | Product · BreadcrumbList · Organization · WebSite/SearchAction · FAQPage · `additionalProperty` · dynamic sitemap (~5,960 URLs) |
