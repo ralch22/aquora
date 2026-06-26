@@ -16,8 +16,19 @@ type FaqItem = { q: string; a: string }
 export default function FaqPage() {
   const items = (faq.items ?? []) as FaqItem[]
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  }
+
   return (
     <div className="bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <PageHeader
         eyebrow="Support"
         title="Frequently Asked Questions"
