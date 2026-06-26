@@ -8,6 +8,7 @@ import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import ProductJsonLd from "@modules/products/components/product-jsonld"
 import TrustStrip from "@modules/products/components/trust-strip"
+import SpecTable from "@modules/products/components/spec-table"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -61,6 +62,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <TrustStrip product={product} />
         </div>
       </div>
+      <SpecTable product={product} />
       <div
         className="content-container my-16 small:my-32"
         data-testid="related-products-container"

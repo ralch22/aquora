@@ -10,6 +10,7 @@ export default function ProductJsonLd({ product }: { product: HttpTypes.StorePro
   const brand = (product.metadata as any)?.brand as string | undefined
   const cat = (product as any).categories?.[0] as { name?: string; handle?: string } | undefined
   const category = cat?.name as string | undefined
+  const specs = ((product.metadata as any)?.specs as { name: string; value: string }[]) || []
 
   const data: Record<string, unknown> = {
     "@context": "https://schema.org/",
@@ -19,6 +20,9 @@ export default function ProductJsonLd({ product }: { product: HttpTypes.StorePro
     ...(image ? { image } : {}),
     ...(brand ? { brand: { "@type": "Brand", name: brand } } : {}),
     ...(category ? { category } : {}),
+    ...(specs.length
+      ? { additionalProperty: specs.map((s) => ({ "@type": "PropertyValue", name: s.name, value: s.value })) }
+      : {}),
     ...(variant?.sku ? { sku: variant.sku } : {}),
     ...(price
       ? {
