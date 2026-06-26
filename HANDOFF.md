@@ -8,6 +8,24 @@ Aquora is a production-grade, AI-powered headless e-commerce platform for **pool
 
 ---
 
+## 🌐 LIVE (stakeholder review)
+
+| | URL |
+|---|---|
+| **Storefront** | **https://aquora-storefront-250350263461.europe-west1.run.app/ae** |
+| Admin | https://aquora-backend-250350263461.europe-west1.run.app/app · `admin@aquora.ae` / `Aquora!2026` |
+| Backend API | https://aquora-backend-250350263461.europe-west1.run.app |
+
+Verified live: catalogue renders · Retail semantic search (`source:retail`) · faceted browse + sort · PDP specs · **Ask Aqua AI assistant returns grounded product cards in-browser**.
+
+**Infra (europe-west1):** Cloud Run `aquora-backend` (2Gi/2cpu, min-1, Cloud SQL socket + SA token for Vertex/Retail) + `aquora-storefront` (1Gi, min-1) → Cloud SQL Postgres 16 `aquora-db` (db-g1-small, ENTERPRISE). Images in Artifact Registry `aquora`. Build: `gcloud builds submit apps/<svc> --tag …/aquora/<svc>:v1 --machine-type=e2-highcpu-8` then `gcloud run deploy`.
+
+**Cost control:** running cost ≈ Cloud SQL (db-g1-small, ~$25–30/mo) + 2 always-warm Cloud Run instances. To pause between reviews: `gcloud run services update aquora-backend --min-instances 0` (and storefront) and `gcloud sql instances patch aquora-db --activation-policy=NEVER` (stop). Teardown: delete the two Cloud Run services + the Cloud SQL instance + the AR repo + `gs://emerge-aquora-deploy`.
+
+> The Cloud Run service-account token (metadata server) powers Vertex/Retail in prod — no gcloud CLI needed there (`gcp-token.ts` switches on `K_SERVICE`).
+
+---
+
 ## 1. What's built
 
 | Capability | Where | Notes |
