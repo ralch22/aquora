@@ -1,6 +1,6 @@
 import { MedusaContainer } from "@medusajs/framework";
 import { ContainerRegistrationKeys, QueryContext } from "@medusajs/framework/utils";
-import { CatalogServiceClient, ProductServiceClient } from "@google-cloud/retail";
+import { CatalogServiceClient, ProductServiceClient, ServingConfigServiceClient } from "@google-cloud/retail";
 
 const PROJECT = process.env.GCP_PROJECT || "emerge-digital-web-7034";
 const CATALOG = `projects/${PROJECT}/locations/global/catalogs/default_catalog`;
@@ -23,11 +23,18 @@ export default async function syncRetail({ container }: { container: MedusaConta
     logger.info("[retail] product level set to primary");
   } catch (e: any) { logger.info("[retail] product level: " + String(e?.message || e).slice(0, 100)); }
 
-  // NOTE: the "default_search" serving config is created automatically when you
-  // accept the Retail data-use terms + enable Search in the Retail console.
-  // retail.ts queries projects/.../servingConfigs/default_search.
+  // 2) Search serving config (idempotent) — retail.ts queries servingConfigs/default_search
+  try {
+    const scClient = new ServingConfigServiceClient();
+    await scClient.createServingConfig({
+      parent: CATALOG,
+      servingConfigId: "default_search",
+      servingConfig: { displayName: "Aquora Search", solutionTypes: ["SOLUTION_TYPE_SEARCH"] },
+    } as any);
+    logger.info("[retail] serving config default_search created");
+  } catch (e: any) { logger.info("[retail] serving config: " + String(e?.message || e).slice(0, 120)); }
 
-  // 2) Import products in batches
+  // 3) Import products in batches
   const productClient = new ProductServiceClient();
   let offset = 0;
   const take = 500;

@@ -101,6 +101,12 @@ export default async function Nav() {
               </div>
 
               <LocalizedClientLink
+                href="/brands"
+                className="font-medium text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150"
+              >
+                Brands
+              </LocalizedClientLink>
+              <LocalizedClientLink
                 href="/services"
                 className="font-medium text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150"
               >
