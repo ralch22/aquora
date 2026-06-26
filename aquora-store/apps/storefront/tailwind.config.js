@@ -69,14 +69,14 @@ module.exports = {
       fontFamily: {
         heading: [
           "Sora",
-          "Inter",
+          "Plus Jakarta Sans",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "sans-serif",
         ],
         sans: [
-          "Inter",
+          "Plus Jakarta Sans",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",

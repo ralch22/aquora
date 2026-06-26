@@ -10,6 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" data-mode="light">
+      <head>
+        {/* Enable scroll-reveal hiding only when JS is present (before paint, no FOUC). */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('aq-js')" }} />
+      </head>
       <body>
         <SiteJsonLd />
         <main className="relative">{props.children}</main>

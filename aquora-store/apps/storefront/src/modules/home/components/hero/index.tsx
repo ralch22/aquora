@@ -1,74 +1,89 @@
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Image from "next/image"
+import PremiumCta from "@modules/common/components/premium-cta"
 import homepage from "@lib/aquora/content/homepage.json"
+
+const HERO_PRODUCT = {
+  title: "Dolphin Scoop Smart",
+  sub: "Robotic pool cleaner",
+  price: "AED 4,410",
+  img: "https://storage.googleapis.com/emerge-aquora-products/dolphin-scoop-smart-robotic-swimming-pool-cleaner-12-15-m/0.webp",
+}
+
+const TRUST = ["5,000+ products in stock", "Genuine, engineered equipment", "48-hr UAE-wide delivery"]
+
+const d = (ms: number) => ({ "--aq-d": `${ms}ms` } as React.CSSProperties)
 
 const Hero = () => {
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-br from-aquora-secondary to-aquora-primary">
-      {/* Subtle ripple / wave motif */}
-      <svg
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 h-full w-full text-white/[0.06]"
-        preserveAspectRatio="xMidYMid slice"
-        viewBox="0 0 1440 720"
-        fill="none"
-      >
-        <defs>
-          <radialGradient id="hero-glow" cx="20%" cy="20%" r="80%">
-            <stop offset="0%" stopColor="#E0A23B" stopOpacity="0.18" />
-            <stop offset="60%" stopColor="#E0A23B" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <rect width="1440" height="720" fill="url(#hero-glow)" />
-        <path
-          d="M0 540 C 240 480, 480 600, 720 540 S 1200 480, 1440 540"
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="none"
-        />
-        <path
-          d="M0 600 C 240 540, 480 660, 720 600 S 1200 540, 1440 600"
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="none"
-        />
-        <path
-          d="M0 660 C 240 600, 480 720, 720 660 S 1200 600, 1440 660"
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="none"
-        />
-      </svg>
-
-      {/* Faint engineering ring (echoes the logo "O") */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-32 -top-24 hidden h-[420px] w-[420px] rounded-full border border-white/10 small:block"
-      >
-        <div className="absolute inset-12 rounded-full border border-aquora-accent/20" />
-        <div className="absolute inset-28 rounded-full border border-white/5" />
+    <section className="relative w-full overflow-hidden bg-aquora-secondary">
+      {/* Atmospheric mesh + wave motif */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-aquora-secondary via-aquora-secondary to-aquora-primary" />
+        <div className="absolute -left-40 -top-24 h-[560px] w-[560px] rounded-full bg-aquora-primary/40 blur-[130px]" />
+        <div className="absolute right-0 top-1/4 h-[460px] w-[460px] rounded-full bg-aquora-accent/15 blur-[140px]" />
+        <svg className="absolute inset-0 h-full w-full text-white/[0.05]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1440 720" fill="none">
+          <path d="M0 560 C 240 500, 480 620, 720 560 S 1200 500, 1440 560" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M0 620 C 240 560, 480 680, 720 620 S 1200 560, 1440 620" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
       </div>
 
-      <div className="content-container relative z-10 flex flex-col justify-center py-24 small:py-36">
-        <div className="max-w-3xl">
-          <p className="mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-aquora-accent">
+      <div className="content-container relative z-10 grid items-center gap-12 py-20 small:grid-cols-12 small:py-28 lg:py-32">
+        {/* Copy */}
+        <div className="small:col-span-7 lg:col-span-6">
+          <span
+            style={d(40)}
+            className="aq-reveal inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-aquora-accent backdrop-blur-sm"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
             {homepage.hero_eyebrow}
-          </p>
-          <h1 className="font-heading text-5xl font-extrabold leading-[1.05] tracking-tight text-white small:text-7xl">
+          </span>
+          <h1 style={d(120)} className="aq-reveal mt-6 font-heading text-[2.7rem] font-extrabold leading-[1.02] tracking-tight text-white small:text-6xl lg:text-[4.6rem]">
             {homepage.hero_title}
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80 small:text-xl">
+          <p style={d(200)} className="aq-reveal mt-6 max-w-xl text-lg leading-relaxed text-white/75">
             {homepage.hero_sub}
           </p>
-          <div className="mt-10 flex flex-col gap-4 xsmall:flex-row">
-            <LocalizedClientLink href="/store" className="btn-accent">
+          <div style={d(280)} className="aq-reveal mt-9 flex flex-wrap items-center gap-3">
+            <PremiumCta href="/store" variant="accent">
               {homepage.hero_cta}
-            </LocalizedClientLink>
-            <LocalizedClientLink
-              href="/services"
-              className="inline-flex items-center justify-center rounded-full border border-white/40 px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-white hover:text-aquora-secondary"
-            >
+            </PremiumCta>
+            <PremiumCta href="/services" variant="ghost">
               {homepage.hero_cta_secondary}
-            </LocalizedClientLink>
+            </PremiumCta>
+          </div>
+          <ul style={d(360)} className="aq-reveal mt-12 flex flex-wrap items-center gap-x-7 gap-y-2 text-sm text-white/55">
+            {TRUST.map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-aquora-accent">
+                  <path d="M3 8.5l3 3 7-7.5" />
+                </svg>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Featured product — double-bezel glass frame */}
+        <div style={d(180)} className="aq-reveal small:col-span-5 lg:col-span-6">
+          <div className="relative mx-auto max-w-md">
+            <div className="rounded-[2.25rem] border border-white/10 bg-white/[0.06] p-2 shadow-[0_30px_80px_-24px_rgba(0,0,0,0.55)] backdrop-blur-md">
+              <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-white to-aquora-surface">
+                <div className="aq-float aspect-square p-10">
+                  <Image src={HERO_PRODUCT.img} alt={HERO_PRODUCT.title} width={560} height={560} className="h-full w-full object-contain" priority />
+                </div>
+                <div className="absolute inset-x-3 bottom-3 flex items-center justify-between rounded-2xl border border-black/5 bg-white/90 px-4 py-3 backdrop-blur">
+                  <div>
+                    <p className="text-sm font-semibold text-aquora-ink">{HERO_PRODUCT.title}</p>
+                    <p className="text-xs text-aquora-muted">{HERO_PRODUCT.sub}</p>
+                  </div>
+                  <span className="rounded-full bg-aquora-primary/10 px-2.5 py-1 text-xs font-bold text-aquora-primary">{HERO_PRODUCT.price}</span>
+                </div>
+              </div>
+            </div>
+            <div className="aq-float-sm absolute -left-4 top-10 hidden rounded-2xl border border-white/10 bg-white/90 px-3.5 py-2 shadow-lg backdrop-blur small:block">
+              <p className="text-[10px] uppercase tracking-wide text-aquora-muted">Cleans</p>
+              <p className="text-sm font-bold text-aquora-ink">12–15 m pools</p>
+            </div>
           </div>
         </div>
       </div>
