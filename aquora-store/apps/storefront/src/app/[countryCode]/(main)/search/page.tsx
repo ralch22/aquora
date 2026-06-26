@@ -75,12 +75,18 @@ function FacetGroup({
   selected: string[]
   hrefFor: (value: string) => string
 }) {
-  if (!options?.length) return null
+  // Always surface currently-selected values, even if other active filters reduced their
+  // count to 0 — otherwise an over-narrowed selection vanishes and can't be toggled off here.
+  const merged = [...(options || [])]
+  for (const sv of selected) {
+    if (!merged.some((o) => o.value === sv)) merged.push({ value: sv, label: sv, count: 0 })
+  }
+  if (!merged.length) return null
   return (
     <div className="border-b border-black/5 pb-5 mb-5">
       <h3 className="text-xs font-semibold uppercase tracking-widest text-aquora-ink mb-3">{title}</h3>
       <ul className="flex flex-col gap-1.5">
-        {options.map((o) => {
+        {merged.map((o) => {
           const on = selected.includes(o.value)
           return (
             <li key={o.value}>
