@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Secrets / env (NEVER commit) — keep templates only
+.env
+.env.*
+!.env.template
+!.env.example
+*.dev.vars
+
+# Build / framework output
+.next/
+out/
+dist/
+build/
+.medusa/
+.turbo/
+*.tsbuildinfo
+
+# Logs
+*.log
+scaffold.log
+backend.log
+seed.log
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local scratch
+/private/tmp/

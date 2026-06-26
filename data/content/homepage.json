@@ -1,0 +1,50 @@
+{
+  "hero_eyebrow": "Pool, spa, pond & fountain equipment — Dubai & the GCC",
+  "hero_title": "Engineered water. Built to last.",
+  "hero_sub": "Aquora supplies the pumps, filtration, heating and automation that keep Gulf pools, spas and water features running flawlessly. Specified by contractors, trusted by villa owners and hospitality groups across the UAE.",
+  "hero_cta": "Browse the catalogue",
+  "hero_cta_secondary": "Request a quote",
+  "stats": [
+    {
+      "value": "5,000+",
+      "label": "Products in stock"
+    },
+    {
+      "value": "48 hr",
+      "label": "Delivery across the UAE"
+    },
+    {
+      "value": "15+ yrs",
+      "label": "Serving Gulf projects"
+    },
+    {
+      "value": "1,200+",
+      "label": "Pools & water features equipped"
+    }
+  ],
+  "sections": [
+    {
+      "heading": "Curated equipment, no compromise",
+      "body": "Every line we carry is chosen for the realities of Gulf water and climate — high mineral loads, intense heat and year-round operation. From the Aquora Pro pump and filtration range to the Lumina LED, Thermaline heating and Pure dosing systems, you get hardware that performs season after season. No grey-market guesswork, just equipment specified to do its job."
+    },
+    {
+      "heading": "Design & installation, done properly",
+      "body": "Tell us the project and our engineers size it correctly the first time — flow rates, turnover, filtration and energy load all accounted for. We supply full equipment schedules for new builds and renovations, and work alongside your contractor or ours. The result is a plant room that runs quietly, efficiently and to specification."
+    },
+    {
+      "heading": "In stock, on site, on time",
+      "body": "We hold deep inventory in the UAE so your project never waits on a shipment. Most orders ship within 48 hours across Dubai, Abu Dhabi and the Northern Emirates, with delivery to the wider GCC on request. Replacement parts and consumables are kept stocked, so a breakdown is a phone call, not a setback."
+    },
+    {
+      "heading": "Expert support & real warranty",
+      "body": "Our team has commissioned and serviced Gulf water systems for over fifteen years, so the advice you get is practical and proven. Every product carries a clear manufacturer warranty, backed locally by Aquora. When you need spares, sizing help or troubleshooting, you reach a specialist who knows the equipment — not a call centre."
+    }
+  ],
+  "trust_signals": [
+    "Built for Gulf water & heat conditions",
+    "UAE-stocked, shipped within 48 hours",
+    "Specified by leading contractors & hospitality groups",
+    "Genuine equipment, fully warranty-backed",
+    "Engineer-led technical support, AED pricing"
+  ]
+}
