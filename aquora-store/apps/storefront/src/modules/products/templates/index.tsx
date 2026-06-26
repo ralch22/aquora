@@ -7,6 +7,7 @@ import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import ProductJsonLd from "@modules/products/components/product-jsonld"
+import TrustStrip from "@modules/products/components/trust-strip"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
@@ -57,6 +58,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           >
             <ProductActionsWrapper id={product.id} region={region} />
           </Suspense>
+          <TrustStrip product={product} />
         </div>
       </div>
       <div
