@@ -18,29 +18,27 @@ export default async function RelatedProducts({
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {}
+  // Aquora products are organised by category (no collections/tags) -> relate by category.
+  const queryParams: HttpTypes.StoreProductListParams = { is_giftcard: false }
   if (region?.id) {
     queryParams.region_id = region.id
   }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
+  const catIds = ((product as any).categories || [])
+    .map((c: any) => c?.id)
+    .filter(Boolean) as string[]
+  if (!catIds.length) {
+    return null
   }
-  if (product.tags) {
-    queryParams.tag_id = product.tags
-      .map((t) => t.id)
-      .filter(Boolean) as string[]
-  }
-  queryParams.is_giftcard = false
+  queryParams.category_id = catIds
 
   const products = await listProducts({
     queryParams,
     countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
-  })
+  }).then(({ response }) =>
+    response.products
+      .filter((responseProduct) => responseProduct.id !== product.id)
+      .slice(0, 4)
+  )
 
   if (!products.length) {
     return null
@@ -48,12 +46,12 @@ export default async function RelatedProducts({
 
   return (
     <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-base-regular text-gray-600 mb-6">
-          Related products
+      <div className="flex flex-col items-center text-center mb-10">
+        <span className="text-aquora-accent text-xs font-semibold uppercase tracking-widest mb-2">
+          More from this range
         </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
+        <p className="font-heading text-2xl text-aquora-ink">
+          You might also like
         </p>
       </div>
 
