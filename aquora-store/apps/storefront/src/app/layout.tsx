@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-mode="light">
+    <html lang="en" data-mode="light" suppressHydrationWarning>
       <head>
         {/* Enable scroll-reveal hiding only when JS is present (before paint, no FOUC). */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('aq-js')" }} />
