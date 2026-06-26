@@ -35,12 +35,15 @@ const TOOLS = [{
 type Sugg = { title: string; handle: string; category: string | null };
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const body = (req.body || {}) as { message?: string; imageBase64?: string; mimeType?: string; history?: any[] };
+  const body = (req.body || {}) as { message?: string; imageBase64?: string; mimeType?: string; audioBase64?: string; audioMimeType?: string; history?: any[] };
   const message = (body.message || "").toString().trim();
   const imageBase64 = (body.imageBase64 || "").toString().replace(/^data:[^,]+,/, "");
   const mimeType = (body.mimeType || "image/jpeg").toString();
-  if (!message && !imageBase64) { res.status(400).json({ error: "Provide 'message' and/or 'imageBase64'." }); return; }
+  const audioBase64 = (body.audioBase64 || "").toString().replace(/^data:[^,]+,/, "");
+  const audioMimeType = (body.audioMimeType || "audio/webm").toString();
+  if (!message && !imageBase64 && !audioBase64) { res.status(400).json({ error: "Provide 'message', 'imageBase64', or 'audioBase64'." }); return; }
   if (imageBase64.length > 9_000_000) { res.status(413).json({ error: "Image too large (max ~6MB)." }); return; }
+  if (audioBase64.length > 9_000_000) { res.status(413).json({ error: "Audio too large (max ~6MB / ~30s)." }); return; }
   if (message.length > 2000) { res.status(413).json({ error: "Message too long." }); return; }
 
   const productService = req.scope.resolve(Modules.PRODUCT);
@@ -99,6 +102,25 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join(" ").replace(/\n/g, " ").trim();
     } catch { return ""; }
   }
+  // Voice modality: Google Cloud Speech-to-Text transcribes the recorded audio (Chrome
+  // MediaRecorder emits WEBM_OPUS, which STT accepts natively) -> a text query for the RAG.
+  async function transcribeAudio(b64: string, mime: string): Promise<string> {
+    try {
+      const token = await getAccessToken();
+      const m = (mime || "").toLowerCase();
+      const encoding = /ogg/.test(m) ? "OGG_OPUS" : /wav|x-wav|linear|pcm/.test(m) ? "LINEAR16" : "WEBM_OPUS";
+      const config: any = { encoding, languageCode: "en-US", alternativeLanguageCodes: ["en-GB", "ar-AE"], enableAutomaticPunctuation: true, model: "latest_short" };
+      if (encoding !== "LINEAR16") config.sampleRateHertz = 48000; // OPUS rate; LINEAR16 read from WAV header
+      const r = await fetch("https://speech.googleapis.com/v1/speech:recognize", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "x-goog-user-project": PROJECT },
+        body: JSON.stringify({ config, audio: { content: b64 } }),
+      });
+      const data: any = await r.json();
+      if (!r.ok) return "";
+      return (data?.results || []).map((x: any) => x.alternatives?.[0]?.transcript || "").join(" ").trim();
+    } catch { return ""; }
+  }
   async function dispatch(name: string, args: any) {
     if (name === "search_products") return await searchProducts(args?.query || message);
     if (name === "visual_search") return await doVisualSearch();
@@ -107,13 +129,22 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   // ---- Retrieve first (reliable RAG), then let Gemini compose a grounded reply ----
+  // Voice: transcribe the audio to text, then treat it exactly like a typed message.
+  let effectiveMessage = message;
+  if (!effectiveMessage && audioBase64) {
+    effectiveMessage = await transcribeAudio(audioBase64, audioMimeType);
+    if (!effectiveMessage) {
+      res.json({ reply: "I didn't quite catch that — could you try again, or type your question?", suggestions: [], ai: false, transcript: "" });
+      return;
+    }
+  }
   let imgKeywords = "";
   if (imageBase64) {
     imgKeywords = await identifyFromImage(imageBase64); // Gemini vision -> keywords
     if (imgKeywords) await searchProducts(imgKeywords);
     if (!suggestions.length) await doVisualSearch(); // Vision Product Search fallback (if ever indexed)
   }
-  if (message) await searchProducts(message);
+  if (effectiveMessage) await searchProducts(effectiveMessage);
   void dispatch; void getProduct; void TOOLS; // (tool defs retained for future agentic mode)
 
   try {
@@ -121,7 +152,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const ctx = suggestions.slice(0, 8).map((s, i) => `${i + 1}. ${s.title}${s.category ? ` [${s.category}]` : ""} (/products/${s.handle})`).join("\n");
     const userParts: any[] = [];
     if (imageBase64) userParts.push({ inlineData: { mimeType, data: imageBase64 } });
-    userParts.push({ text: `Customer: ${message || "Find products like the attached photo."}\n\nRelevant Aquora catalogue items:\n${ctx || "(no close matches found)"}\n\nRecommend the most suitable items by name and explain briefly why they fit. If nothing fits, suggest a free consultation. Be concise.` });
+    userParts.push({ text: `Customer: ${effectiveMessage || "Find products like the attached photo."}\n\nRelevant Aquora catalogue items:\n${ctx || "(no close matches found)"}\n\nRecommend the most suitable items by name and explain briefly why they fit. If nothing fits, suggest a free consultation. Be concise.` });
     const url = `https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${LOCATION}/publishers/google/models/${MODEL}:generateContent`;
     const r = await fetch(url, {
       method: "POST",
@@ -136,11 +167,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (!r.ok) throw new Error(typeof data?.error?.message === "string" ? data.error.message : JSON.stringify(data).slice(0, 160));
     const reply = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("").trim()
       || (suggestions.length ? "Here are some options from our catalogue that should fit." : "I couldn't find a confident match — would you like a free consultation with our engineers?");
-    res.json({ reply, suggestions: suggestions.slice(0, 6), ai: true });
+    res.json({ reply, suggestions: suggestions.slice(0, 6), ai: true, transcript: effectiveMessage });
   } catch (e: any) {
     res.json({
       reply: suggestions.length ? "Here are some Aquora products that match. For a tailored specification, request a free consultation." : "Our advisor is briefly unavailable — please try again or request a free consultation.",
-      suggestions: suggestions.slice(0, 6), ai: false, error: String(e?.message || e).slice(0, 120),
+      suggestions: suggestions.slice(0, 6), ai: false, transcript: effectiveMessage, error: String(e?.message || e).slice(0, 120),
     });
   }
 }

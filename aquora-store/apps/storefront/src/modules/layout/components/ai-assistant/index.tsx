@@ -15,6 +15,7 @@ type Message = {
   text: string
   suggestions?: Suggestion[]
   image?: string
+  pending?: boolean
 }
 
 const GREETING: Message = {
@@ -79,6 +80,34 @@ const CameraIcon = () => (
   </svg>
 )
 
+const MicIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
+  </svg>
+)
+
+const StopIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+  </svg>
+)
+
+const SpeakerOnIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
+  </svg>
+)
+
+const SpeakerOffIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+    <line x1="22" y1="9" x2="16" y2="15" />
+    <line x1="16" y1="9" x2="22" y2="15" />
+  </svg>
+)
+
 const AiAssistant = () => {
   const params = useParams()
   const countryCode =
@@ -89,10 +118,16 @@ const AiAssistant = () => {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState<{ dataUrl: string; mime: string } | null>(null)
+  const [recording, setRecording] = useState(false)
+  const [speakReplies, setSpeakReplies] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
+  const streamRef = useRef<MediaStream | null>(null)
+  const recTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -128,9 +163,43 @@ const AiAssistant = () => {
     return () => window.removeEventListener("keydown", onKey)
   }, [open])
 
+  const speakReply = (text: string) => {
+    if (!speakReplies || typeof window === "undefined" || !window.speechSynthesis) return
+    try {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(text)
+      u.lang = "en-GB"
+      u.rate = 1.02
+      window.speechSynthesis.speak(u)
+    } catch {}
+  }
+
+  const postToAssistant = async (reqBody: Record<string, unknown>) => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/assistant`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
+      },
+      body: JSON.stringify(reqBody),
+    })
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+    return (await res.json()) as { reply?: string; suggestions?: Suggestion[]; ai?: boolean; transcript?: string }
+  }
+
+  const appendAssistant = (data: { reply?: string; suggestions?: Suggestion[] }) => {
+    const text = data.reply || "I'm here to help with Aquora equipment — could you rephrase that?"
+    setMessages((prev) => [...prev, { role: "assistant", text, suggestions: Array.isArray(data.suggestions) ? data.suggestions : undefined }])
+    speakReply(text)
+  }
+
+  const appendError = () => {
+    setMessages((prev) => [...prev, { role: "assistant", text: "Sorry, I couldn't reach our advisor just now. Please try again in a moment, or contact our team directly." }])
+  }
+
   const sendMessage = async () => {
     const message = input.trim()
-    if ((!message && !image) || loading) return
+    if ((!message && !image) || loading || recording) return
 
     const sentImage = image
     setMessages((prev) => [
@@ -140,61 +209,115 @@ const AiAssistant = () => {
     setInput("")
     setImage(null)
     setLoading(true)
-
     try {
-      const reqBody: { message?: string; imageBase64?: string; mimeType?: string } = {}
+      const reqBody: Record<string, unknown> = {}
       if (message) reqBody.message = message
       if (sentImage) {
         reqBody.imageBase64 = sentImage.dataUrl.replace(/^data:[^,]+,/, "")
         reqBody.mimeType = sentImage.mime
       }
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/assistant`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-publishable-api-key":
-              process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
-          },
-          body: JSON.stringify(reqBody),
-        }
-      )
-
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`)
-      }
-
-      const data: {
-        reply?: string
-        suggestions?: Suggestion[]
-        ai?: boolean
-      } = await res.json()
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text:
-            data.reply ||
-            "I'm here to help with Aquora equipment — could you rephrase that?",
-          suggestions: Array.isArray(data.suggestions)
-            ? data.suggestions
-            : undefined,
-        },
-      ])
+      appendAssistant(await postToAssistant(reqBody))
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: "Sorry, I couldn't reach our advisor just now. Please try again in a moment, or contact our team directly.",
-        },
-      ])
+      appendError()
     } finally {
       setLoading(false)
     }
   }
+
+  // ---- Voice input (MediaRecorder -> WebM/Opus -> backend Speech-to-Text) ----
+  const stopRecording = () => {
+    if (recTimerRef.current) {
+      clearTimeout(recTimerRef.current)
+      recTimerRef.current = null
+    }
+    try {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") recorderRef.current.stop()
+    } catch {}
+    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current = null
+    setRecording(false)
+  }
+
+  const sendAudio = async (blob: Blob) => {
+    if (!blob.size) return
+    setLoading(true)
+    setMessages((prev) => [...prev, { role: "user", text: "🎤 …", pending: true }]) // optimistic
+    try {
+      const audioBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]+,/, ""))
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+      const data = await postToAssistant({ audioBase64, audioMimeType: blob.type || "audio/webm" })
+      setMessages((prev) => {
+        const next = [...prev]
+        for (let i = next.length - 1; i >= 0; i--) {
+          if (next[i].pending) {
+            next[i] = { role: "user", text: data.transcript || "🎤 (voice message)" }
+            break
+          }
+        }
+        return next
+      })
+      appendAssistant(data)
+    } catch {
+      setMessages((prev) => prev.filter((m) => !m.pending))
+      appendError()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const startRecording = async () => {
+    if (recording || loading) return
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setMessages((prev) => [...prev, { role: "assistant", text: "Voice input isn't supported in this browser — you can type your question instead." }])
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+      const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : ""
+      const mr = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined)
+      chunksRef.current = []
+      mr.ondataavailable = (e) => {
+        if (e.data.size) chunksRef.current.push(e.data)
+      }
+      mr.onstop = () => sendAudio(new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" }))
+      recorderRef.current = mr
+      mr.start()
+      setRecording(true)
+      recTimerRef.current = setTimeout(() => stopRecording(), 30000) // 30s safety cap
+    } catch {
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+      setMessages((prev) => [...prev, { role: "assistant", text: "I need microphone access to listen. Please allow it, or type your question instead." }])
+    }
+  }
+
+  // Cleanup audio + speech on close/unmount
+  useEffect(() => {
+    if (!open) {
+      stopRecording()
+      try {
+        window.speechSynthesis?.cancel()
+      } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+  useEffect(() => {
+    return () => {
+      try {
+        window.speechSynthesis?.cancel()
+      } catch {}
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+    }
+  }, [])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -229,6 +352,25 @@ const AiAssistant = () => {
               </div>
               <p className="truncate text-xs text-white/75">Aquora advisor</p>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSpeakReplies((v) => {
+                  if (v) {
+                    try {
+                      window.speechSynthesis?.cancel()
+                    } catch {}
+                  }
+                  return !v
+                })
+              }}
+              aria-label="Read replies aloud"
+              aria-pressed={speakReplies}
+              title={speakReplies ? "Voice replies on" : "Voice replies off"}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white"
+            >
+              {speakReplies ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
+            </button>
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -325,28 +467,50 @@ const AiAssistant = () => {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                disabled={loading}
+                disabled={loading || recording}
                 aria-label="Attach a photo to search"
                 title="Search by photo"
                 className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-large border border-aquora-muted/30 text-aquora-muted transition hover:border-aquora-primary hover:text-aquora-primary disabled:opacity-50"
               >
                 <CameraIcon />
               </button>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder="Ask, or attach a photo…"
-                aria-label="Message Aqua"
+              <button
+                type="button"
+                onClick={recording ? stopRecording : startRecording}
                 disabled={loading}
-                className="min-w-0 flex-1 rounded-large border border-aquora-muted/30 bg-aquora-surface px-3 py-2 text-sm text-aquora-ink outline-none transition placeholder:text-aquora-muted focus:border-aquora-primary disabled:opacity-60"
-              />
+                aria-label={recording ? "Stop recording" : "Ask by voice"}
+                aria-pressed={recording}
+                title={recording ? "Stop recording" : "Speak your question"}
+                className={`flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-large border transition disabled:opacity-50 ${
+                  recording
+                    ? "animate-pulse border-red-500 bg-red-500 text-white motion-reduce:animate-none"
+                    : "border-aquora-muted/30 text-aquora-muted hover:border-aquora-primary hover:text-aquora-primary"
+                }`}
+              >
+                {recording ? <StopIcon /> : <MicIcon />}
+              </button>
+              {recording ? (
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-large border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600" aria-live="polite">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-500 motion-reduce:animate-none" aria-hidden="true" />
+                  Listening… tap to stop
+                </div>
+              ) : (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={onKeyDown}
+                  placeholder="Ask, speak, or attach a photo…"
+                  aria-label="Message Aqua"
+                  disabled={loading}
+                  className="min-w-0 flex-1 rounded-large border border-aquora-muted/30 bg-aquora-surface px-3 py-2 text-sm text-aquora-ink outline-none transition placeholder:text-aquora-muted focus:border-aquora-primary disabled:opacity-60"
+                />
+              )}
               <button
                 type="button"
                 onClick={sendMessage}
-                disabled={loading || (!input.trim() && !image)}
+                disabled={loading || recording || (!input.trim() && !image)}
                 aria-label="Send message"
                 className="btn-primary flex h-[38px] w-[38px] shrink-0 items-center justify-center !rounded-large !p-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
