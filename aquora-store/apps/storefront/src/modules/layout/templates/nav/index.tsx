@@ -32,7 +32,7 @@ export default async function Nav() {
         </p>
       </div>
 
-      <header className="relative h-16 mx-auto border-b duration-200 bg-white border-black/5">
+      <header className="relative mx-auto h-16 border-b border-black/[0.06] bg-white/85 backdrop-blur-xl">
         <nav className="content-container text-aquora-ink/80 flex items-center justify-between w-full h-full text-small-regular">
           {/* Left: mobile menu + desktop shop/links */}
           <div className="flex-1 basis-0 h-full flex items-center gap-x-6">
@@ -71,31 +71,48 @@ export default async function Nav() {
                   </svg>
                 </button>
 
-                {/* Dropdown panel */}
-                <div className="invisible opacity-0 translate-y-1 group-hover/shop:visible group-hover/shop:opacity-100 group-hover/shop:translate-y-0 transition-all duration-200 absolute top-full left-0 z-50 pt-3">
-                  <div className="w-[640px] max-w-[90vw] rounded-large border border-black/5 bg-white shadow-xl overflow-hidden">
-                    <div className="bg-gradient-to-br from-aquora-secondary to-aquora-primary px-6 py-4">
-                      <p className="font-heading text-base font-bold tracking-tight text-white">
+                {/* Mega-menu */}
+                <div className="invisible absolute left-0 top-full z-50 translate-y-2 pt-3 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/shop:visible group-hover/shop:translate-y-0 group-hover/shop:opacity-100">
+                  <div className="flex w-[760px] max-w-[92vw] overflow-hidden rounded-[1.5rem] border border-black/[0.06] bg-white shadow-[0_30px_70px_-28px_rgba(11,31,36,0.32)]">
+                    <div className="flex-1 p-5">
+                      <p className="mb-3 px-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-aquora-muted">
                         Shop by category
                       </p>
-                      <p className="mt-0.5 text-xs text-white/70">
-                        Engineered equipment for pools, spas, ponds &amp;
-                        fountains.
-                      </p>
+                      <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                        {categories.map((cat) => (
+                          <li key={cat.handle}>
+                            <LocalizedClientLink
+                              href={`/categories/${cat.handle}`}
+                              className="group/cat flex items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-sm text-aquora-ink/80 transition-colors duration-150 hover:bg-aquora-surface hover:text-aquora-primary"
+                            >
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aquora-muted/40 transition-colors group-hover/cat:bg-aquora-accent" />
+                              {cat.name}
+                            </LocalizedClientLink>
+                          </li>
+                        ))}
+                      </ul>
+                      <LocalizedClientLink href="/store" className="mt-3 inline-flex items-center gap-1.5 px-2.5 text-sm font-semibold text-aquora-primary transition-colors hover:text-aquora-secondary">
+                        View all products
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
+                        </svg>
+                      </LocalizedClientLink>
                     </div>
-                    <ul className="grid grid-cols-2 gap-x-6 gap-y-1 p-4">
-                      {categories.map((cat) => (
-                        <li key={cat.handle}>
-                          <LocalizedClientLink
-                            href={`/categories/${cat.handle}`}
-                            className="group/cat flex items-center gap-x-2 rounded-rounded px-3 py-2 text-sm text-aquora-ink/80 hover:bg-aquora-surface hover:text-aquora-primary transition-colors duration-150"
-                          >
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aquora-muted/40 group-hover/cat:bg-aquora-accent transition-colors duration-150" />
-                            {cat.name}
-                          </LocalizedClientLink>
-                        </li>
-                      ))}
-                    </ul>
+                    <LocalizedClientLink href="/store" className="group/feat relative hidden w-60 shrink-0 overflow-hidden bg-gradient-to-br from-aquora-secondary to-aquora-primary p-6 text-white small:block">
+                      <svg aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 text-white/[0.07]" viewBox="0 0 240 120" fill="none">
+                        <path d="M0 80 Q 60 50 120 80 T 240 80" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M0 100 Q 60 70 120 100 T 240 100" stroke="currentColor" strokeWidth="1.5" />
+                      </svg>
+                      <p className="relative text-[11px] font-semibold uppercase tracking-[0.18em] text-aquora-accent">Not sure what you need?</p>
+                      <p className="relative mt-2 font-heading text-lg font-bold leading-snug">Ask Aqua — our AI advisor</p>
+                      <p className="relative mt-2 text-xs leading-relaxed text-white/70">Describe, photograph or speak what you need and get the right kit in seconds.</p>
+                      <span className="relative mt-5 inline-flex items-center gap-2 rounded-full bg-aquora-accent px-4 py-2 text-xs font-semibold text-aquora-ink transition-transform duration-300 group-hover/feat:-translate-y-0.5">
+                        Browse the catalogue
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M4.5 11.5l7-7M6 4.5h5.5V10" />
+                        </svg>
+                      </span>
+                    </LocalizedClientLink>
                   </div>
                 </div>
               </div>
