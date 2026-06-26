@@ -37,3 +37,4 @@ seed.log
 data/catalog-raw.json
 data/image-map.json
 data/reference/
+aquora-store/apps/storefront/.env.production
