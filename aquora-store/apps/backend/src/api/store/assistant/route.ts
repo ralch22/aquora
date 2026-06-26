@@ -1,7 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
-import { GoogleGenAI } from "@google/genai";
 import { visualSearch } from "../../../lib/vision-search";
+import { getAccessToken } from "../../../lib/gcp-token";
 
 const PROJECT = process.env.GCP_PROJECT || "emerge-digital-web-7034";
 const LOCATION = process.env.GCP_LOCATION || "global";
@@ -93,13 +93,25 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   void dispatch; void getProduct; void TOOLS; // (tool defs retained for future agentic mode)
 
   try {
-    const ai = new GoogleGenAI({ vertexai: true, project: PROJECT, location: LOCATION });
+    const token = await getAccessToken(); // Rami-scoped token (drift-proof, not ADC)
     const ctx = suggestions.slice(0, 8).map((s, i) => `${i + 1}. ${s.title}${s.category ? ` [${s.category}]` : ""} (/products/${s.handle})`).join("\n");
     const userParts: any[] = [];
     if (imageBase64) userParts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64 } });
     userParts.push({ text: `Customer: ${message || "Find products like the attached photo."}\n\nRelevant Aquora catalogue items:\n${ctx || "(no close matches found)"}\n\nRecommend the most suitable items by name and explain briefly why they fit. If nothing fits, suggest a free consultation. Be concise.` });
-    const resp = await ai.models.generateContent({ model: MODEL, contents: [...(Array.isArray(body.history) ? body.history : []), { role: "user", parts: userParts }], config: { systemInstruction: SYSTEM } });
-    const reply = (resp.text || "").trim() || (suggestions.length ? "Here are some options from our catalogue that should fit." : "I couldn't find a confident match — would you like a free consultation with our engineers?");
+    const url = `https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${LOCATION}/publishers/google/models/${MODEL}:generateContent`;
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM }] },
+        contents: [...(Array.isArray(body.history) ? body.history : []), { role: "user", parts: userParts }],
+        generationConfig: { temperature: 0.6, maxOutputTokens: 500 },
+      }),
+    });
+    const data: any = await r.json();
+    if (!r.ok) throw new Error(typeof data?.error?.message === "string" ? data.error.message : JSON.stringify(data).slice(0, 160));
+    const reply = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join("").trim()
+      || (suggestions.length ? "Here are some options from our catalogue that should fit." : "I couldn't find a confident match — would you like a free consultation with our engineers?");
     res.json({ reply, suggestions: suggestions.slice(0, 6), ai: true });
   } catch (e: any) {
     res.json({
