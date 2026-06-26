@@ -1,131 +1,108 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
+import { GoogleGenAI } from "@google/genai";
+import { visualSearch } from "../../../lib/vision-search";
 
-type ProductLite = {
-  id: string;
-  title: string;
-  handle: string;
-  subtitle?: string;
-  description?: string;
-  categories?: { name: string }[];
-};
+const PROJECT = process.env.GCP_PROJECT || "emerge-digital-web-7034";
+const LOCATION = process.env.GCP_LOCATION || "global";
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-const SYSTEM_PROMPT = `You are "Aqua", the expert virtual advisor for Aquora — a premium Dubai/GCC supplier of pool, spa, pond and fountain equipment.
-You help villa owners, contractors and facilities buyers specify the right equipment.
-Be confident, expert, concise and practical. Use British-influenced UAE English and AED for prices.
-Only recommend products from the provided catalogue context. If the catalogue lacks a good match, say so and suggest requesting a free consultation.
-Keep answers under 130 words unless asked for detail. Never invent SKUs, prices or specifications that aren't in the context.`;
+const SYSTEM = `You are "Aqua", the expert multimodal shopping advisor for Aquora — a premium UAE/GCC supplier of pool, spa, pond and fountain equipment.
+Help customers find the right equipment. Be confident, expert, concise and practical; UAE English; prices in AED.
+ALWAYS call search_products (with the key product nouns, e.g. "robotic cleaner", "LED light", "sand filter") BEFORE telling a customer something isn't available — the catalogue has ~6,000 items. When the user attaches a photo, call visual_search. Use get_product for details.
+Only recommend products returned by the tools — never invent SKUs or prices. If the tools genuinely return nothing, suggest a free consultation. Keep replies under ~140 words.`;
 
-function keywordScore(p: ProductLite, terms: string[]): number {
-  const hay = `${p.title} ${p.subtitle || ""} ${p.description || ""} ${(p.categories || [])
-    .map((c) => c.name)
-    .join(" ")}`.toLowerCase();
-  let score = 0;
-  for (const t of terms) if (t.length > 2 && hay.includes(t)) score += 1;
-  return score;
-}
+const TOOLS = [{
+  functionDeclarations: [
+    {
+      name: "search_products",
+      description: "Full-text search the Aquora catalogue for products matching a query (e.g. 'variable speed pump', 'sand filter 20ft pool').",
+      parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] },
+    },
+    {
+      name: "visual_search",
+      description: "Find products visually similar to the photo the customer attached. Call this (no arguments) when an image is provided.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+    {
+      name: "get_product",
+      description: "Get details for one product by its handle.",
+      parameters: { type: "object", properties: { handle: { type: "string" } }, required: ["handle"] },
+    },
+  ],
+}];
+
+type Sugg = { title: string; handle: string; category: string | null };
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const body = (req.body || {}) as { message?: string };
+  const body = (req.body || {}) as { message?: string; imageBase64?: string; history?: any[] };
   const message = (body.message || "").toString().trim();
+  const imageBase64 = (body.imageBase64 || "").toString().replace(/^data:[^,]+,/, "");
+  if (!message && !imageBase64) { res.status(400).json({ error: "Provide 'message' and/or 'imageBase64'." }); return; }
 
-  if (!message) {
-    res.status(400).json({ error: "Missing 'message' in request body." });
-    return;
-  }
-
+  const productService = req.scope.resolve(Modules.PRODUCT);
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
+  const suggestions: Sugg[] = [];
+  const pushSugg = (arr: any[]) => { for (const p of arr) if (p?.handle && !suggestions.find((s) => s.handle === p.handle)) suggestions.push({ title: p.title, handle: p.handle, category: p.categories?.[0]?.name || null }); };
 
-  // Pull a working set of published products to ground the answer.
-  let products: ProductLite[] = [];
-  try {
-    const { data } = await query.graph({
-      entity: "product",
-      fields: ["id", "title", "handle", "subtitle", "description", "categories.name"],
-      filters: { status: "published" },
-      pagination: { take: 200 },
-    });
-    products = data as ProductLite[];
-  } catch (e) {
-    products = [];
-  }
-
-  const terms = message.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-  const ranked = products
-    .map((p) => ({ p, s: keywordScore(p, terms) }))
-    .sort((a, b) => b.s - a.s);
-  const matched = ranked.filter((r) => r.s > 0).slice(0, 6).map((r) => r.p);
-  const suggestions = (matched.length ? matched : ranked.slice(0, 4).map((r) => r.p)).map(
-    (p) => ({
-      title: p.title,
-      handle: p.handle,
-      subtitle: p.subtitle || null,
-      category: p.categories?.[0]?.name || null,
-    })
-  );
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || "gemini-flash-latest";
-
-  // Graceful fallback when Gemini is not configured: keyword-matched suggestions + canned reply.
-  if (!apiKey) {
-    const reply = suggestions.length
-      ? `Here are some Aquora products that match your enquiry. For a tailored specification, request a free consultation and our engineers will size the right system for you.`
-      : `Thanks for your enquiry. Our engineers can help specify the right equipment — please request a free consultation and we'll get back to you.`;
-    res.json({ reply, suggestions, ai: false });
-    return;
-  }
-
-  const catalogueContext = suggestions
-    .map(
-      (s, i) =>
-        `${i + 1}. ${s.title}${s.category ? ` [${s.category}]` : ""}${
-          s.subtitle ? ` — ${s.subtitle}` : ""
-        } (/products/${s.handle})`
-    )
-    .join("\n");
-
-  const userPrompt = `Customer question: ${message}\n\nRelevant Aquora catalogue items:\n${
-    catalogueContext || "(no close matches found)"
-  }\n\nAnswer the customer and, where relevant, point them to specific items above by name.`;
-
-  try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 400 },
-        }),
-      }
-    );
-    if (!r.ok) {
-      const txt = await r.text();
-      res.json({
-        reply:
-          "Our advisor is briefly unavailable. Here are some relevant products, or request a free consultation.",
-        suggestions,
-        ai: false,
-        error: `gemini_${r.status}`,
-        detail: txt.slice(0, 300),
-      });
-      return;
+  const STOP = new Set(["pool","spa","the","for","with","you","have","need","want","best","good","show","find","please","some","this","that","your","our","and","any","what","which","looking","like","would"]);
+  async function searchProducts(qstr: string) {
+    const words = (qstr || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 3 && !STOP.has(w));
+    const terms = words.length ? words.slice(0, 4) : [(qstr || "").toLowerCase()];
+    const score = new Map<string, { p: any; n: number }>();
+    for (const t of terms) {
+      try {
+        const products = await productService.listProducts({ q: t } as any, { take: 12 } as any);
+        for (const p of products) { const e = score.get(p.id) || { p, n: 0 }; e.n++; score.set(p.id, e); }
+      } catch {}
     }
-    const data = (await r.json()) as any;
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ||
-      "I couldn't generate a response just now — please try again or request a consultation.";
-    res.json({ reply, suggestions, ai: true });
+    const ranked = [...score.values()].sort((a, b) => b.n - a.n).slice(0, 6).map((e) => e.p);
+    pushSugg(ranked);
+    return ranked.map((p: any) => ({ title: p.title, handle: p.handle, category: p.categories?.[0]?.name || null }));
+  }
+  async function getProduct(handle: string) {
+    try {
+      const { data } = await query.graph({ entity: "product", fields: ["title", "handle", "description", "categories.name"], filters: { handle, status: "published" } as any, pagination: { take: 1 } });
+      const p = data[0]; if (!p) return { error: "not found" };
+      pushSugg([p]);
+      return { title: p.title, handle: p.handle, description: p.description, category: p.categories?.[0]?.name || null };
+    } catch { return { error: "lookup failed" }; }
+  }
+  async function doVisualSearch() {
+    if (!imageBase64) return [];
+    try {
+      const handles = await visualSearch(imageBase64); // Vision Product Search -> product handles
+      if (!handles.length) return [];
+      const { data } = await query.graph({ entity: "product", fields: ["title", "handle", "categories.name"], filters: { handle: handles, status: "published" } as any, pagination: { take: 6 } });
+      pushSugg(data);
+      return data.map((p: any) => ({ title: p.title, handle: p.handle, category: p.categories?.[0]?.name || null }));
+    } catch { return []; }
+  }
+  async function dispatch(name: string, args: any) {
+    if (name === "search_products") return await searchProducts(args?.query || message);
+    if (name === "visual_search") return await doVisualSearch();
+    if (name === "get_product") return await getProduct(args?.handle);
+    return { error: "unknown tool" };
+  }
+
+  // ---- Retrieve first (reliable RAG), then let Gemini compose a grounded reply ----
+  if (message) await searchProducts(message);
+  if (imageBase64) await doVisualSearch();
+  void dispatch; void getProduct; void TOOLS; // (tool defs retained for future agentic mode)
+
+  try {
+    const ai = new GoogleGenAI({ vertexai: true, project: PROJECT, location: LOCATION });
+    const ctx = suggestions.slice(0, 8).map((s, i) => `${i + 1}. ${s.title}${s.category ? ` [${s.category}]` : ""} (/products/${s.handle})`).join("\n");
+    const userParts: any[] = [];
+    if (imageBase64) userParts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64 } });
+    userParts.push({ text: `Customer: ${message || "Find products like the attached photo."}\n\nRelevant Aquora catalogue items:\n${ctx || "(no close matches found)"}\n\nRecommend the most suitable items by name and explain briefly why they fit. If nothing fits, suggest a free consultation. Be concise.` });
+    const resp = await ai.models.generateContent({ model: MODEL, contents: [...(Array.isArray(body.history) ? body.history : []), { role: "user", parts: userParts }], config: { systemInstruction: SYSTEM } });
+    const reply = (resp.text || "").trim() || (suggestions.length ? "Here are some options from our catalogue that should fit." : "I couldn't find a confident match — would you like a free consultation with our engineers?");
+    res.json({ reply, suggestions: suggestions.slice(0, 6), ai: true });
   } catch (e: any) {
     res.json({
-      reply:
-        "Our advisor is briefly unavailable. Here are some relevant products, or request a free consultation.",
-      suggestions,
-      ai: false,
-      error: "gemini_exception",
+      reply: suggestions.length ? "Here are some Aquora products that match. For a tailored specification, request a free consultation." : "Our advisor is briefly unavailable — please try again or request a free consultation.",
+      suggestions: suggestions.slice(0, 6), ai: false, error: String(e?.message || e).slice(0, 120),
     });
   }
 }

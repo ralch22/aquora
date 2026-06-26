@@ -32,3 +32,8 @@ seed.log
 
 # Local scratch
 /private/tmp/
+
+# Large regenerable scrape artifacts (rebuild via scripts/crawl-direct.mjs + image pipeline)
+data/catalog-raw.json
+data/image-map.json
+data/reference/
