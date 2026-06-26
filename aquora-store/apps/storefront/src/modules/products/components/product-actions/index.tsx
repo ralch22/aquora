@@ -53,6 +53,12 @@ export default function ProductActions({
       return
     }
 
+    // Single-variant products: always select the only variant. Avoids an intermittent
+    // "Select a model" state when option-keymap matching races hydration / missing option_id.
+    if (product.variants.length === 1) {
+      return product.variants[0]
+    }
+
     return product.variants.find((v) => {
       const variantOptions = optionsAsKeymap(v.options)
       return isEqual(variantOptions, options)
@@ -69,6 +75,9 @@ export default function ProductActions({
 
   //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
+    if (product.variants?.length === 1) {
+      return true
+    }
     return product.variants?.some((v) => {
       const variantOptions = optionsAsKeymap(v.options)
       return isEqual(variantOptions, options)
