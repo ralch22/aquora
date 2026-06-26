@@ -80,6 +80,24 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return data.map((p: any) => ({ title: p.title, handle: p.handle, category: p.categories?.[0]?.name || null }));
     } catch { return []; }
   }
+  // Multimodal photo-search: Gemini identifies the equipment in the photo -> search keywords.
+  async function identifyFromImage(b64: string): Promise<string> {
+    try {
+      const token = await getAccessToken();
+      const url = `https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/${LOCATION}/publishers/google/models/${MODEL}:generateContent`;
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ inlineData: { mimeType: "image/jpeg", data: b64 } }, { text: "This is a photo of pool, spa, pond or fountain equipment. Reply with ONLY 2-4 short product-search keywords (e.g. \"sand filter\", \"robotic cleaner\", \"heat pump\", \"LED light\"), comma-separated. No other text." }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 40 },
+        }),
+      });
+      const data: any = await r.json();
+      if (!r.ok) return "";
+      return (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text).filter(Boolean).join(" ").replace(/\n/g, " ").trim();
+    } catch { return ""; }
+  }
   async function dispatch(name: string, args: any) {
     if (name === "search_products") return await searchProducts(args?.query || message);
     if (name === "visual_search") return await doVisualSearch();
@@ -88,8 +106,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   // ---- Retrieve first (reliable RAG), then let Gemini compose a grounded reply ----
+  let imgKeywords = "";
+  if (imageBase64) {
+    imgKeywords = await identifyFromImage(imageBase64); // Gemini vision -> keywords
+    if (imgKeywords) await searchProducts(imgKeywords);
+    if (!suggestions.length) await doVisualSearch(); // Vision Product Search fallback (if ever indexed)
+  }
   if (message) await searchProducts(message);
-  if (imageBase64) await doVisualSearch();
   void dispatch; void getProduct; void TOOLS; // (tool defs retained for future agentic mode)
 
   try {
