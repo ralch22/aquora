@@ -58,7 +58,16 @@ export async function retailSearch(query: string, opts: RetailSearchOpts = {}): 
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "x-goog-user-project": PROJECT },
       body: JSON.stringify(body),
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      let msg = "";
+      try {
+        const e: any = await r.json();
+        msg = e?.error?.message || "";
+      } catch {}
+      // Surface token/quota/filter failures instead of silently degrading to Medusa.
+      console.warn(`[retail] search non-200 ${r.status}: ${String(msg).slice(0, 160)}`);
+      return null;
+    }
     const data: any = await r.json();
 
     const ids = (data.results || []).map((x: any) => x.id).filter(Boolean);
@@ -78,7 +87,8 @@ export async function retailSearch(query: string, opts: RetailSearchOpts = {}): 
     }));
 
     return { ids, total: Number(data.totalSize || ids.length), facets };
-  } catch {
+  } catch (e) {
+    console.warn(`[retail] search error: ${(e as Error)?.message || e}`);
     return null;
   }
 }

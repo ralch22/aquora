@@ -4,6 +4,7 @@ import { retailSearch, PRICE_BANDS } from "../../../lib/retail";
 
 const STOP = new Set(["pool", "spa", "the", "for", "with", "you", "and", "any", "best"]);
 const PAGE_SIZE = 24;
+const MAX_PAGE = 1000; // cap deep pagination (each Retail call is billable; deep offsets return empty)
 
 // Accept ?brand=a,b or repeated ?brand=a&brand=b
 function parseList(v: unknown): string[] {
@@ -14,9 +15,12 @@ function parseList(v: unknown): string[] {
     .filter(Boolean);
 }
 
-// Quote a facet value for a Retail ANY(...) filter clause.
-function q(s: string): string {
-  return `"${s.replace(/["\\]/g, "")}"`;
+// Whitelist facet values to characters that occur in real brand/category names
+// (letters, numbers, space, & / - _ .) — strips quotes, commas, parens and boolean
+// operators so a crafted value can neither break out of the ANY("…") literal nor
+// inject filter clauses.
+function sanitizeFacet(s: string): string {
+  return s.replace(/[^\p{L}\p{N}\s\-_.&/]/gu, "").trim();
 }
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -29,19 +33,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const graph = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const productService = req.scope.resolve(Modules.PRODUCT);
 
-  const page = Math.max(1, parseInt((req.query.page || "1").toString(), 10) || 1);
-  const brands = parseList(req.query.brand);
-  const cats = parseList(req.query.cat);
+  const page = Math.max(1, Math.min(MAX_PAGE, parseInt((req.query.page || "1").toString(), 10) || 1));
+  const brands = parseList(req.query.brand).map(sanitizeFacet).filter(Boolean);
+  const cats = parseList(req.query.cat).map(sanitizeFacet).filter(Boolean);
   const priceKey = (req.query.price || "").toString().trim();
+  const band = PRICE_BANDS.find((b) => b.key === priceKey);
 
   // Build the Retail filter expression from the active facet selections.
   const parts: string[] = [];
-  if (brands.length) parts.push(`brands: ANY(${brands.map(q).join(",")})`);
-  if (cats.length) parts.push(`categories: ANY(${cats.map(q).join(",")})`);
-  const band = PRICE_BANDS.find((b) => b.key === priceKey);
-  if (band) {
-    parts.push(band.max === undefined ? `price >= ${band.min}` : `price: IN(${band.min}.0, ${band.max}.0)`);
-  }
+  if (brands.length) parts.push(`brands: ANY(${brands.map((b) => `"${b}"`).join(",")})`);
+  if (cats.length) parts.push(`categories: ANY(${cats.map((c) => `"${c}"`).join(",")})`);
+  if (band) parts.push(band.max === undefined ? `price >= ${band.min}` : `price >= ${band.min} AND price < ${band.max}`);
   const filter = parts.join(" AND ");
 
   let regionId: string | undefined;
@@ -50,11 +52,38 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     regionId = data[0]?.id;
   } catch {}
 
-  // 1) Google Retail (semantic + facets + pagination). 2) Tokenized Medusa fallback.
+  // Hydrate ordered product cards for a list of handles.
+  const buildCards = async (handles: string[]): Promise<any[]> => {
+    if (!handles.length) return [];
+    try {
+      const { data } = await graph.graph({
+        entity: "product",
+        fields: ["handle", "title", "thumbnail", "images.url", "categories.name", "metadata", "variants.calculated_price.*"],
+        filters: { handle: handles } as any,
+        pagination: { take: handles.length },
+        ...(regionId ? { context: { variants: { calculated_price: QueryContext({ region_id: regionId, currency_code: "aed" }) } } } : {}),
+      } as any);
+      const byHandle = new Map((data as any[]).map((p) => [p.handle, p]));
+      return handles
+        .map((h) => byHandle.get(h))
+        .filter(Boolean)
+        .map((p: any) => ({
+          handle: p.handle,
+          title: p.title,
+          thumbnail: p.thumbnail || p.images?.[0]?.url || null,
+          category: p.categories?.[0]?.name || null,
+          brand: (p.metadata?.brand as string) || null,
+          price: p.variants?.[0]?.calculated_price?.calculated_amount ?? null,
+        }));
+    } catch {
+      return [];
+    }
+  };
+
   let source = "retail";
   let total = 0;
   let facetsOut: Record<string, any[]> = {};
-  let handles: string[] = [];
+  let products: any[] = [];
 
   const retail = await retailSearch(query, {
     visitorId: (req.query.v || "anon").toString(),
@@ -63,8 +92,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     filter,
   });
 
-  if (retail && (retail.ids.length || retail.total)) {
-    handles = retail.ids;
+  if (retail !== null) {
+    // Retail responded — authoritative, even with zero results (an over-filtered query
+    // must show "no matches", NOT silently fall back to an unfiltered Medusa search).
     total = retail.total;
     const byKey: Record<string, string> = { brands: "brands", categories: "categories", price: "price" };
     for (const f of retail.facets) {
@@ -81,14 +111,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         facetsOut[name] = f.values.map((v) => ({ value: v.value, label: v.value, count: v.count }));
       }
     }
+    products = await buildCards(retail.ids);
   } else {
+    // Retail unavailable → tokenized Medusa fallback that RE-APPLIES the active facets,
+    // so a shopper's brand/category/price selections are still honoured during an outage.
     source = "medusa";
     const words = query.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w));
     const terms = words.length ? words.slice(0, 4) : [query.toLowerCase()];
     const score = new Map<string, { h: string; n: number }>();
     for (const t of terms) {
       try {
-        const ps = await productService.listProducts({ q: t } as any, { take: 48 } as any);
+        const ps = await productService.listProducts({ q: t } as any, { take: 100 } as any);
         for (const p of ps) {
           const e = score.get(p.id) || { h: p.handle, n: 0 };
           e.n++;
@@ -96,38 +129,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         }
       } catch {}
     }
-    const ranked = [...score.values()].sort((a, b) => b.n - a.n).map((e) => e.h);
-    total = ranked.length;
-    handles = ranked.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const ranked = [...score.values()].sort((a, b) => b.n - a.n).map((e) => e.h).slice(0, 300);
+    let cards = await buildCards(ranked);
+    if (brands.length) cards = cards.filter((c) => c.brand && brands.includes(c.brand));
+    if (cats.length) cards = cards.filter((c) => c.category && cats.includes(c.category));
+    if (band) cards = cards.filter((c) => c.price != null && c.price >= band.min && (band.max === undefined || c.price < band.max));
+    total = cards.length;
+    products = cards.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   }
 
-  if (!handles.length) {
-    res.json({ products: [], facets: facetsOut, total, page, pageSize: PAGE_SIZE, source, query });
-    return;
-  }
-
-  let cards: any[] = [];
-  try {
-    const { data } = await graph.graph({
-      entity: "product",
-      fields: ["handle", "title", "thumbnail", "images.url", "categories.name", "metadata", "variants.calculated_price.*"],
-      filters: { handle: handles } as any,
-      pagination: { take: handles.length },
-      ...(regionId ? { context: { variants: { calculated_price: QueryContext({ region_id: regionId, currency_code: "aed" }) } } } : {}),
-    } as any);
-    const byHandle = new Map((data as any[]).map((p) => [p.handle, p]));
-    cards = handles
-      .map((h) => byHandle.get(h))
-      .filter(Boolean)
-      .map((p: any) => ({
-        handle: p.handle,
-        title: p.title,
-        thumbnail: p.thumbnail || p.images?.[0]?.url || null,
-        category: p.categories?.[0]?.name || null,
-        brand: (p.metadata?.brand as string) || null,
-        price: p.variants?.[0]?.calculated_price?.calculated_amount ?? null,
-      }));
-  } catch {}
-
-  res.json({ products: cards, facets: facetsOut, total, page, pageSize: PAGE_SIZE, source, query });
+  res.json({ products, facets: facetsOut, total, page, pageSize: PAGE_SIZE, source, query });
 }
