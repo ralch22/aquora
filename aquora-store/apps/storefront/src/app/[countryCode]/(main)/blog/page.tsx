@@ -2,37 +2,52 @@ import { Metadata } from "next"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import PageHeader from "./_lib/page-header"
-import { readContentMarkdown, extractTitle, extractExcerpt } from "./_lib/markdown"
+import { readContentMarkdown, extractTitle, extractExcerpt, listBlogSlugs } from "./_lib/markdown"
 
 export const metadata: Metadata = {
   title: "Insights & Guides — Aquora",
   description:
-    "Engineer-led guides on pool filtration, saltwater systems, heat-pump sizing and architectural fountains — written for Gulf conditions by the Aquora technical team.",
+    "Engineer-led guides on pool filtration, saltwater systems, heat-pump sizing, automation and architectural water features — written for Gulf conditions by the Aquora technical team.",
 }
 
-const SLUGS = ["filtration", "saltwater", "heatpump", "fountain"] as const
+// The original four anchor the top of the grid; newer guides follow alphabetically.
+const PREFERRED_ORDER = ["filtration", "saltwater", "heatpump", "fountain"]
 
-const FALLBACK_TITLES: Record<string, string> = {
-  filtration: "Choosing the Right Pool Filtration System",
-  saltwater: "Saltwater vs Chlorine Pools in the Gulf",
-  heatpump: "Sizing a Pool Heat Pump for Year-Round Swimming",
-  fountain: "Designing a Modern Architectural Fountain",
+// Derive a topic chip from the slug so newly-added articles categorise themselves.
+const TOPIC_RULES: [RegExp, string][] = [
+  [/heatpump|heat-pump/, "Heating"],
+  [/filtration|filter/, "Filtration"],
+  [/salt|chlorinat|scale|hard-water/, "Water Treatment"],
+  [/pump/, "Circulation"],
+  [/cover|evaporat|energy/, "Efficiency"],
+  [/light/, "Lighting"],
+  [/spa/, "Spa & Wellness"],
+  [/pond|fountain|feature/, "Water Features"],
+  [/automation|smart|control/, "Automation"],
+]
+
+function topicFor(slug: string): string {
+  for (const [re, label] of TOPIC_RULES) if (re.test(slug)) return label
+  return "Guide"
 }
 
-const TOPICS: Record<string, string> = {
-  filtration: "Filtration",
-  saltwater: "Water Treatment",
-  heatpump: "Heating",
-  fountain: "Fountains",
+function titleCase(slug: string): string {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 function getArticles() {
-  return SLUGS.map((slug) => {
+  const slugs = listBlogSlugs()
+  slugs.sort((a, b) => {
+    const ia = PREFERRED_ORDER.indexOf(a)
+    const ib = PREFERRED_ORDER.indexOf(b)
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b)
+  })
+  return slugs.map((slug) => {
     const md = readContentMarkdown(`blog/${slug}.md`)
     return {
       slug,
-      topic: TOPICS[slug],
-      title: extractTitle(md, FALLBACK_TITLES[slug]),
+      topic: topicFor(slug),
+      title: extractTitle(md, titleCase(slug)),
       excerpt: extractExcerpt(md, 220),
     }
   })

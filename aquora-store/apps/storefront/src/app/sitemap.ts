@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next"
+import { listBlogSlugs } from "./[countryCode]/(main)/blog/_lib/markdown"
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -41,6 +42,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchAllHandles("product-categories", "product_categories"),
   ])
 
+  for (const slug of listBlogSlugs()) {
+    entries.push({ url: `${BASE}/${CC}/blog/${slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.5 })
+  }
   for (const handle of categories) {
     entries.push({ url: `${BASE}/${CC}/categories/${handle}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })
   }

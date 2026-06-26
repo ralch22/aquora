@@ -9,24 +9,32 @@ import {
   renderContentMarkdown,
   extractTitle,
   extractExcerpt,
+  listBlogSlugs,
 } from "../_lib/markdown"
 
-const SLUGS = ["filtration", "saltwater", "heatpump", "fountain"] as const
-type Slug = (typeof SLUGS)[number]
+const TOPIC_RULES: [RegExp, string][] = [
+  [/heatpump|heat-pump/, "Heating"],
+  [/filtration|filter/, "Filtration"],
+  [/salt|chlorinat|scale|hard-water/, "Water Treatment"],
+  [/pump/, "Circulation"],
+  [/cover|evaporat|energy/, "Efficiency"],
+  [/light/, "Lighting"],
+  [/spa/, "Spa & Wellness"],
+  [/pond|fountain|feature/, "Water Features"],
+  [/automation|smart|control/, "Automation"],
+]
 
-const TOPICS: Record<Slug, string> = {
-  filtration: "Filtration",
-  saltwater: "Water Treatment",
-  heatpump: "Heating",
-  fountain: "Fountains",
+function topicFor(slug: string): string {
+  for (const [re, label] of TOPIC_RULES) if (re.test(slug)) return label
+  return "Guide"
 }
 
-function isValidSlug(slug: string): slug is Slug {
-  return (SLUGS as readonly string[]).includes(slug)
+function isValidSlug(slug: string): boolean {
+  return listBlogSlugs().includes(slug)
 }
 
 export function generateStaticParams() {
-  return SLUGS.map((slug) => ({ slug }))
+  return listBlogSlugs().map((slug) => ({ slug }))
 }
 
 export async function generateMetadata(props: {
@@ -64,7 +72,7 @@ export default async function BlogArticlePage(props: {
   return (
     <div className="bg-white">
       <PageHeader
-        eyebrow={`Insights & Guides · ${TOPICS[slug]}`}
+        eyebrow={`Insights & Guides · ${topicFor(slug)}`}
         title={title}
         subtitle={brand.tagline}
         variant="teal"

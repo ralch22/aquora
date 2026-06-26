@@ -40,6 +40,19 @@ export function sanitizeMarkdown(raw: string): string {
   return text
 }
 
+/** List blog article slugs by reading the content/blog directory. */
+export function listBlogSlugs(): string[] {
+  try {
+    const dir = path.join(process.cwd(), CONTENT_ROOT, "blog")
+    return fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .map((f) => f.replace(/\.md$/, ""))
+  } catch {
+    return []
+  }
+}
+
 /** Read + sanitize a markdown file relative to the content root. */
 export function readContentMarkdown(relativePath: string): string {
   const abs = path.join(process.cwd(), CONTENT_ROOT, relativePath)
