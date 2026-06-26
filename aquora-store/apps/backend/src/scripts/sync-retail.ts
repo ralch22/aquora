@@ -54,7 +54,7 @@ export default async function syncRetail({ container }: { container: MedusaConta
 
   // 3) import products in batches (inline -> LRO -> poll)
   let offset = 0;
-  const take = 500;
+  const take = 100;
   let total = 0;
   while (true) {
     const { data } = await query.graph({
