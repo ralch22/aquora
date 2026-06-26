@@ -14,6 +14,12 @@ export default async function importSpecs({ container }: { container: MedusaCont
   const specsByHandle: Record<string, { name: string; value: string }[]> = JSON.parse(
     fs.readFileSync(SPECS_PATH, "utf-8")
   );
+  // The import slugged handles (non-alphanumeric -> hyphen), so scraped source handles
+  // with dots (e.g. "d.e.-filter") don't match exactly. Index by normalized handle too.
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 120).replace(/^-+|-+$/g, "");
+  const normIndex: Record<string, { name: string; value: string }[]> = {};
+  for (const [h, v] of Object.entries(specsByHandle)) normIndex[norm(h)] = v;
+  const lookup = (handle: string) => specsByHandle[handle] || normIndex[norm(handle)];
   logger.info(`[specs] loaded specs for ${Object.keys(specsByHandle).length} handles`);
 
   let offset = 0;
@@ -29,8 +35,8 @@ export default async function importSpecs({ container }: { container: MedusaCont
     if (!data.length) break;
 
     const updates = (data as any[])
-      .filter((p) => specsByHandle[p.handle]?.length)
-      .map((p) => ({ id: p.id, metadata: { ...(p.metadata || {}), specs: specsByHandle[p.handle] } }));
+      .filter((p) => lookup(p.handle)?.length)
+      .map((p) => ({ id: p.id, metadata: { ...(p.metadata || {}), specs: lookup(p.handle) } }));
 
     if (updates.length) {
       await updateProductsWorkflow(container).run({ input: { products: updates as any } });
