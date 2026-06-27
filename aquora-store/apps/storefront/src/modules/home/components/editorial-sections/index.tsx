@@ -1,4 +1,12 @@
+import Image from "next/image"
 import homepage from "@lib/aquora/content/homepage.json"
+
+const IMAGES = [
+  "/images/brand/editorial-equipment.webp",
+  "/images/brand/editorial-install.webp",
+  "/images/brand/editorial-delivery.webp",
+  "/images/brand/editorial-support.webp",
+]
 
 const EditorialSections = () => {
   return (
@@ -12,36 +20,21 @@ const EditorialSections = () => {
                 key={section.heading}
                 className="grid grid-cols-1 items-center gap-8 small:grid-cols-2 small:gap-16"
               >
-                {/* Visual panel — CSS-only teal motif */}
+                {/* Visual panel — real brand photography with a teal wash */}
                 <div
-                  className={`relative aspect-[4/3] overflow-hidden rounded-large bg-gradient-to-br from-aquora-secondary to-aquora-primary ${
+                  className={`relative aspect-[4/3] overflow-hidden rounded-large bg-aquora-secondary ${
                     reversed ? "small:order-2" : ""
                   }`}
                 >
-                  <svg
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full text-white/10"
-                    viewBox="0 0 400 300"
-                    fill="none"
-                    preserveAspectRatio="xMidYMid slice"
-                  >
-                    <path
-                      d="M0 200 C 80 170, 140 230, 220 200 S 360 170, 400 200"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <path
-                      d="M0 230 C 80 200, 140 260, 220 230 S 360 200, 400 230"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                  </svg>
-                  <div className="absolute right-8 top-8 h-28 w-28 rounded-full border border-aquora-accent/30">
-                    <div className="absolute inset-4 rounded-full border border-white/15" />
-                  </div>
-                  <span className="absolute bottom-6 left-7 font-heading text-7xl font-extrabold text-white/10">
+                  <Image
+                    src={IMAGES[i % IMAGES.length]}
+                    alt={section.heading}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-aquora-secondary/65 via-transparent to-transparent" />
+                  <span className="absolute bottom-5 left-6 font-heading text-7xl font-extrabold text-white/25">
                     0{i + 1}
                   </span>
                 </div>

@@ -12,6 +12,9 @@ if (process.env.STRIPE_API_KEY) {
     options: {
       apiKey: process.env.STRIPE_API_KEY,
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+      // Create PaymentIntents with automatic_payment_methods so Apple Pay / Google Pay
+      // (via the Express Checkout Element) are eligible alongside cards.
+      automaticPaymentMethods: true,
     },
   })
 }

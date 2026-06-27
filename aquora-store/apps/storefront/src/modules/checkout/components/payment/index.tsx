@@ -8,6 +8,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
+import ExpressCheckout from "@modules/checkout/components/express-checkout"
 import Divider from "@modules/common/components/divider"
 import {
   Button,
@@ -146,6 +147,7 @@ const Payment = ({
       </div>
       <div>
         <div className={isOpen ? "block" : "hidden"}>
+          {!paidByGiftcard && <ExpressCheckout />}
           {!paidByGiftcard && availablePaymentMethods?.length && (
             <>
               <RadioGroup

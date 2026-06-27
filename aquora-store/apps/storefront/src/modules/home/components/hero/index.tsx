@@ -16,9 +16,12 @@ const d = (ms: number) => ({ "--aq-d": `${ms}ms` } as React.CSSProperties)
 const Hero = () => {
   return (
     <section className="relative w-full overflow-hidden bg-aquora-secondary">
-      {/* Atmospheric mesh + wave motif */}
+      {/* Atmospheric photo + teal wash + wave motif */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-aquora-secondary via-aquora-secondary to-aquora-primary" />
+        <Image src="/images/brand/hero-bg.webp" alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-aquora-secondary/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-aquora-secondary via-aquora-secondary/85 to-aquora-secondary/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-aquora-secondary/90 via-transparent to-aquora-secondary/20" />
         <div className="absolute -left-40 -top-24 h-[560px] w-[560px] rounded-full bg-aquora-primary/40 blur-[130px]" />
         <div className="absolute right-0 top-1/4 h-[460px] w-[460px] rounded-full bg-aquora-accent/15 blur-[140px]" />
         <svg className="absolute inset-0 h-full w-full text-white/[0.05]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1440 720" fill="none">
