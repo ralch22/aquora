@@ -26,3 +26,54 @@ export function parseSpecs(title: string): Spec[] {
   const seen = new Set<string>()
   return out.filter((s) => (seen.has(s.label) ? false : (seen.add(s.label), true))).slice(0, 5)
 }
+
+// Prefer the real, factual metadata.specs (scraped) for the chip row; fall back to
+// title-parsing when a product has no specs. Names carry units (e.g. "Power, kW",
+// "Recommended flow rate m3/h") which we fold into the value for a clean chip.
+type RawSpec = { name: string; value: string }
+const CHIP_PRIORITY: { test: RegExp; label: string }[] = [
+  { test: /^power\b(?!\s*consumption)/i, label: "Power" },
+  { test: /flow/i, label: "Flow rate" },
+  { test: /pool volume/i, label: "Pool volume" },
+  { test: /voltage/i, label: "Voltage" },
+  { test: /phase/i, label: "Phase" },
+  { test: /power consumption/i, label: "Power use" },
+  { test: /pressure/i, label: "Pressure" },
+  { test: /capacity/i, label: "Capacity" },
+  { test: /(filter|heat pump)\s*type/i, label: "Type" },
+]
+
+function chipValue(spec: RawSpec): string | null {
+  let value = (spec.value || "").trim()
+  if (!value) return null
+  let unit = ""
+  const comma = spec.name.match(/,\s*([^,]+)$/) // ", kW" / ", mm"
+  if (comma) unit = comma[1].trim()
+  if (!unit) {
+    const tail = spec.name.match(/\b(m3\s*\/\s*h|m3|kW|HP|bar|mm|l\s*\/\s*h)\b/i)
+    if (tail) unit = tail[1]
+  }
+  unit = unit.replace(/m3\s*\/\s*h/i, "m³/h").replace(/m3/i, "m³")
+  if (unit && !new RegExp(unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(value)) {
+    value = `${value} ${unit}`
+  }
+  return value.length > 24 ? null : value // skip long values (e.g. dimensions)
+}
+
+export function topSpecChips(specs: RawSpec[] | undefined, title: string, max = 4): Spec[] {
+  if (specs?.length) {
+    const out: Spec[] = []
+    const used = new Set<string>()
+    for (const pr of CHIP_PRIORITY) {
+      const m = specs.find((s) => pr.test.test(s.name) && !used.has(s.name))
+      if (!m) continue
+      const value = chipValue(m)
+      if (!value) continue
+      used.add(m.name)
+      out.push({ label: pr.label, value })
+      if (out.length >= max) break
+    }
+    if (out.length >= 2) return out
+  }
+  return parseSpecs(title).slice(0, max)
+}

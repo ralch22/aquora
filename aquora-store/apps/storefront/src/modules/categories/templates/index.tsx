@@ -9,6 +9,7 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { categories as aquoraCategories } from "@lib/aquora/categories"
 
 export default function CategoryTemplate({
   category,
@@ -75,11 +76,16 @@ export default function CategoryTemplate({
             <path d="M3 8h10M9 4l4 4-4 4" />
           </svg>
         </LocalizedClientLink>
-        {category.description && (
-          <div className="mb-8 text-base-regular">
-            <p>{category.description}</p>
-          </div>
-        )}
+        {(() => {
+          const intro =
+            category.description ||
+            aquoraCategories.find((c) => c.handle === category.handle)?.description
+          return intro ? (
+            <div className="mb-8 max-w-3xl text-base leading-relaxed text-aquora-muted">
+              <p>{intro}</p>
+            </div>
+          ) : null
+        })()}
         {category.category_children && (
           <div className="mb-8 text-base-large">
             <ul className="grid grid-cols-1 gap-2">

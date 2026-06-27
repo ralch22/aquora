@@ -9,6 +9,8 @@ import ProductInfo from "@modules/products/templates/product-info"
 import ProductJsonLd from "@modules/products/components/product-jsonld"
 import TrustStrip from "@modules/products/components/trust-strip"
 import SpecTable from "@modules/products/components/spec-table"
+import KeyFeatures from "@modules/products/components/key-features"
+import FrequentlyBoughtTogether from "@modules/products/components/frequently-bought-together"
 import Reveal from "@modules/common/components/reveal"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
@@ -42,6 +44,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       >
         <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
           <ProductInfo product={product} />
+          <KeyFeatures product={product} />
           <ProductTabs product={product} />
         </div>
         <div className="block w-full relative">
@@ -70,6 +73,13 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         <div className="content-container my-16 small:my-32" data-testid="related-products-container">
           <Suspense fallback={<SkeletonRelatedProducts />}>
             <RelatedProducts product={product} countryCode={countryCode} />
+          </Suspense>
+        </div>
+      </Reveal>
+      <Reveal>
+        <div className="content-container mb-16 small:mb-32">
+          <Suspense fallback={null}>
+            <FrequentlyBoughtTogether product={product} countryCode={countryCode} />
           </Suspense>
         </div>
       </Reveal>

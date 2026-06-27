@@ -1,7 +1,7 @@
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@modules/common/components/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { parseSpecs } from "@lib/aquora/specs"
+import { topSpecChips } from "@lib/aquora/specs"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
@@ -9,8 +9,12 @@ type ProductInfoProps = {
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
   const category = (product as any).categories?.[0] as { name?: string; handle?: string } | undefined
-  const brand = (product.metadata as any)?.brand as string | undefined
-  const specs = parseSpecs(product.title || "")
+  const md = (product.metadata as any) || {}
+  const brand = md.brand as string | undefined
+  const overview = (md.overview as string | undefined) || product.description
+  const idealFor = md.idealFor as string | undefined
+  const sku = (product.variants?.[0] as any)?.sku as string | undefined
+  const specs = topSpecChips(md.specs, product.title || "")
 
   return (
     <div id="product-info">
@@ -59,8 +63,18 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
         )}
 
         <Text className="text-medium text-ui-fg-subtle whitespace-pre-line" data-testid="product-description">
-          {product.description}
+          {overview}
         </Text>
+
+        {idealFor && (
+          <p className="text-sm text-aquora-muted">
+            <span className="font-semibold text-aquora-ink">Ideal for</span> — {idealFor}
+          </p>
+        )}
+
+        {sku && (
+          <p className="text-xs uppercase tracking-wide text-aquora-muted/80">Ref: {sku}</p>
+        )}
       </div>
     </div>
   )

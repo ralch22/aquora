@@ -87,12 +87,15 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const overview = ((product.metadata as any)?.overview as string | undefined) || product.description || product.title
+  const metaDescription = overview.replace(/\s+/g, " ").trim().slice(0, 160)
+
   return {
-    title: `${product.title} | Medusa Store`,
-    description: `${product.title}`,
+    title: `${product.title} | Aquora`,
+    description: metaDescription,
     openGraph: {
-      title: `${product.title} | Medusa Store`,
-      description: `${product.title}`,
+      title: `${product.title} | Aquora`,
+      description: metaDescription,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }
