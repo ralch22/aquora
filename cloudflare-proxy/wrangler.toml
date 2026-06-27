@@ -1,0 +1,13 @@
+name = "aquora-proxy"
+main = "src/proxy.js"
+account_id = "4a75e91d6fca8bc58467fb80ce1b9c2e"
+compatibility_date = "2024-11-06"
+workers_dev = false
+
+routes = [
+  { pattern = "aquora.ae", custom_domain = true },
+  { pattern = "www.aquora.ae", custom_domain = true },
+  { pattern = "api.aquora.ae", custom_domain = true },
+  { pattern = "aquora.store", custom_domain = true },
+  { pattern = "www.aquora.store", custom_domain = true },
+]

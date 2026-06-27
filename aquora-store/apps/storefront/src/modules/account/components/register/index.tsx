@@ -96,8 +96,9 @@ const Register = ({ setCurrentView }: Props) => {
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
         Already a member?{" "}
         <button
+          type="button"
           onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
-          className="underline"
+          className="text-aquora-primary font-semibold hover:underline"
         >
           Sign in
         </button>

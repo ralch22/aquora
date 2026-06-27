@@ -62,6 +62,7 @@ const Login = ({ setCurrentView }: Props) => {
       <span className="mt-6 block text-sm text-aquora-muted">
         Not a member?{" "}
         <button
+          type="button"
           onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
           className="font-semibold text-aquora-primary hover:underline"
           data-testid="register-button"
