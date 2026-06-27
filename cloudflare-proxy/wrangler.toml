@@ -4,9 +4,11 @@ account_id = "4a75e91d6fca8bc58467fb80ce1b9c2e"
 compatibility_date = "2024-11-06"
 workers_dev = false
 
+# aquora.ae + www already have proxied records -> attach via routes (intercept before origin).
+# api.aquora.ae + aquora.store have no DNS records -> custom domains create them (no conflict).
 routes = [
-  { pattern = "aquora.ae", custom_domain = true },
-  { pattern = "www.aquora.ae", custom_domain = true },
+  { pattern = "aquora.ae/*", zone_name = "aquora.ae" },
+  { pattern = "www.aquora.ae/*", zone_name = "aquora.ae" },
   { pattern = "api.aquora.ae", custom_domain = true },
   { pattern = "aquora.store", custom_domain = true },
   { pattern = "www.aquora.store", custom_domain = true },
