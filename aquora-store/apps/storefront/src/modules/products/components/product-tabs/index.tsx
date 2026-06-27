@@ -49,7 +49,7 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
   return (
     <div className="py-6">
       {details && (
-        <div className="mb-7 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-ui-fg-subtle">
+        <div className="mb-7 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-aquora-muted">
           {details}
         </div>
       )}
@@ -71,7 +71,7 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
       )}
 
       {!details && !specs.length && (
-        <p className="text-small-regular text-ui-fg-subtle">
+        <p className="text-small-regular text-aquora-muted">
           Detailed specifications available on request.
         </p>
       )}

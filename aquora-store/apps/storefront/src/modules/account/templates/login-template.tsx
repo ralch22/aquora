@@ -35,9 +35,9 @@ const LoginTemplate = () => {
             <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
             Pool · spa · pond · fountain
           </span>
-          <h1 className="mt-4 max-w-md font-heading text-4xl font-bold leading-[1.1] tracking-tight">
+          <h2 className="mt-4 max-w-md font-heading text-4xl font-bold leading-[1.1] tracking-tight">
             Your account for engineered water.
-          </h1>
+          </h2>
           <ul className="mt-8 space-y-3">
             {TRUST.map((t) => (
               <li key={t} className="flex items-start gap-3 text-white/80">

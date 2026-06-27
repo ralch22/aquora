@@ -93,7 +93,7 @@ const Register = ({ setCurrentView }: Props) => {
           Join
         </SubmitButton>
       </form>
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
+      <span className="text-center text-aquora-ink text-small-regular mt-6">
         Already a member?{" "}
         <button
           type="button"

@@ -407,7 +407,7 @@ const AiAssistant = () => {
                     <img
                       src={msg.image}
                       alt="Attached"
-                      className="mb-1.5 max-h-32 w-auto rounded-rounded object-cover"
+                      className="mb-1.5 max-h-32 w-auto rounded-lg object-cover"
                     />
                   )}
                   {msg.text}
@@ -455,7 +455,7 @@ const AiAssistant = () => {
             {image && (
               <div className="mb-2 flex items-center gap-2 rounded-large border border-black/5 bg-aquora-surface p-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image.dataUrl} alt="To send" className="h-10 w-10 rounded-rounded object-cover" />
+                <img src={image.dataUrl} alt="To send" className="h-10 w-10 rounded-lg object-cover" />
                 <span className="flex-1 text-xs text-aquora-muted">Photo attached — send to identify it.</span>
                 <button type="button" onClick={() => setImage(null)} aria-label="Remove photo" className="flex h-6 w-6 items-center justify-center rounded-full text-aquora-muted transition hover:bg-black/5">
                   <CloseIcon />

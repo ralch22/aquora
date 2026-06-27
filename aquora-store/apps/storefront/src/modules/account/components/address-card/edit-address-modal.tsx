@@ -63,7 +63,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
     <>
       <div
         className={clx(
-          "border rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
+          "border rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
           {
             "border-gray-900": isActive,
           }
@@ -79,7 +79,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
           </Heading>
           {address.company && (
             <Text
-              className="txt-compact-small text-ui-fg-base"
+              className="txt-compact-small text-aquora-ink"
               data-testid="address-company"
             >
               {address.company}
@@ -101,7 +101,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
         </div>
         <div className="flex items-center gap-x-4">
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-aquora-ink flex items-center gap-x-2"
             onClick={open}
             data-testid="address-edit-button"
           >
@@ -109,7 +109,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
             Edit
           </button>
           <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
+            className="text-small-regular text-aquora-ink flex items-center gap-x-2"
             onClick={removeAddress}
             data-testid="address-delete-button"
           >

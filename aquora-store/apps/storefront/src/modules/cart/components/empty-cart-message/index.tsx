@@ -21,10 +21,10 @@ const EmptyCartMessage = () => {
         Your cart
       </span>
       <h1 className="mt-4 font-heading text-3xl font-bold tracking-tight text-aquora-ink small:text-4xl">
-        Nothing here yet
+        Your cart is empty
       </h1>
       <p className="mt-4 max-w-md text-base leading-relaxed text-aquora-muted">
-        Browse thousands of genuine pool, spa and fountain components — engineered, in stock and delivered across the UAE.
+        Browse 5,900+ genuine pool, spa and fountain components — engineered, stocked in the UAE and ready to ship.
       </p>
 
       <div className="mt-8">
