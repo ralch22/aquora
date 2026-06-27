@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   title: "Aquora — Pool, Spa & Fountain Equipment in the UAE",
   description:
     "Aquora supplies premium, genuinely engineered pool, spa, pond and fountain equipment across Dubai and the GCC — pumps, filtration, heating, automation and expert technical support.",
+  openGraph: {
+    title: "Aquora — Engineered Pool, Spa & Fountain Equipment",
+    description:
+      "Genuinely engineered pool, spa, pond and fountain equipment, stocked and supported across the UAE & GCC.",
+    images: [{ url: "/images/brand/og.webp", width: 1200, height: 675 }],
+    type: "website",
+  },
 }
 
 export default async function Home({
