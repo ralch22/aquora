@@ -29,7 +29,10 @@ async function fetchAllHandles(resource: string, key: string): Promise<string[]>
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
-  const staticPaths = ["", "store", "brands", "services", "about", "blog", "faq", "search"]
+  const staticPaths = [
+    "", "store", "brands", "services", "about", "blog", "faq", "search", "contact",
+    "legal/terms", "legal/privacy", "legal/returns", "legal/shipping", "legal/cookies",
+  ]
   const entries: MetadataRoute.Sitemap = staticPaths.map((p) => ({
     url: `${BASE}/${CC}${p ? `/${p}` : ""}`,
     lastModified: now,

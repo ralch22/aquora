@@ -14,8 +14,17 @@ const companyLinks = [
 
 const supportLinks = [
   { label: "FAQ", href: "/faq" },
-  { label: "Delivery & Returns", href: "/faq" },
+  { label: "Shipping", href: "/legal/shipping" },
+  { label: "Returns & Refunds", href: "/legal/returns" },
   { label: "Warranty & Spares", href: "/faq" },
+]
+
+const legalLinks = [
+  { label: "Terms", href: "/legal/terms" },
+  { label: "Privacy", href: "/legal/privacy" },
+  { label: "Returns", href: "/legal/returns" },
+  { label: "Shipping", href: "/legal/shipping" },
+  { label: "Cookies", href: "/legal/cookies" },
 ]
 
 export default async function Footer() {
@@ -170,13 +179,26 @@ export default async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col gap-y-2 small:flex-row small:items-center small:justify-between border-t border-black/5 py-6">
-          <Text className="text-xs text-aquora-muted">
-            © {year} {brand.name}. All rights reserved.
-          </Text>
-          <Text className="text-xs text-aquora-muted">
-            Pool, Spa &amp; Fountain Equipment · Dubai, UAE
-          </Text>
+        <div className="flex flex-col gap-y-4 border-t border-black/5 py-6">
+          <nav className="flex flex-wrap gap-x-5 gap-y-2">
+            {legalLinks.map((link) => (
+              <LocalizedClientLink
+                key={link.label}
+                href={link.href}
+                className="text-xs text-aquora-muted hover:text-aquora-primary transition-colors"
+              >
+                {link.label}
+              </LocalizedClientLink>
+            ))}
+          </nav>
+          <div className="flex flex-col gap-y-2 small:flex-row small:items-center small:justify-between">
+            <Text className="text-xs text-aquora-muted">
+              © {year} {brand.name}. All rights reserved.
+            </Text>
+            <Text className="text-xs text-aquora-muted">
+              Pool, Spa &amp; Fountain Equipment · Dubai, UAE
+            </Text>
+          </div>
         </div>
       </div>
     </footer>

@@ -10,6 +10,7 @@ import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
 import { Toaster } from "@modules/common/components/toast"
+import CookieConsent from "@modules/analytics/cookie-consent"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -44,6 +45,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
       <Footer />
       <AiAssistant />
       <Toaster />
+      <CookieConsent />
     </>
   )
 }

@@ -24,6 +24,12 @@ export default function GAScript() {
 
   return (
     <>
+      {/* Google Consent Mode v2 — default everything to DENIED before any tag loads; the
+          cookie-consent banner flips it to granted on accept. A prior 'granted' cookie is
+          honoured immediately so returning visitors aren't re-gated. */}
+      <Script id="consent-default" strategy="afterInteractive">
+        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=window.gtag||gtag;gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});try{var m=document.cookie.match(/aq_consent=(granted|denied)/);if(m&&m[1]==='granted'){gtag('consent','update',{ad_storage:'granted',analytics_storage:'granted',ad_user_data:'granted',ad_personalization:'granted'});}}catch(e){}`}
+      </Script>
       {GTM_ID && (
         <>
           <Script id="gtm-init" strategy="afterInteractive">
