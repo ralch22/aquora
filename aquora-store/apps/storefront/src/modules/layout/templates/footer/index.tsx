@@ -2,7 +2,7 @@ import { Text } from "@modules/common/components/ui";
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import PremiumCta from "@modules/common/components/premium-cta"
-import { brand, contact } from "@lib/aquora/brand"
+import { brand, contact, hasRealPhone, hasRealWhatsapp } from "@lib/aquora/brand"
 import { categories } from "@lib/aquora/categories"
 
 const companyLinks = [
@@ -144,7 +144,7 @@ export default async function Footer() {
               <span className="font-heading text-xs font-semibold uppercase tracking-wider text-aquora-ink">
                 Contact
               </span>
-              <ul className="flex flex-col gap-y-2 text-sm text-aquora-muted">
+              <ul className="flex flex-col gap-y-2 text-sm text-aquora-ink/75">
                 <li>
                   <a
                     href={`mailto:${contact.email}`}
@@ -153,24 +153,28 @@ export default async function Footer() {
                     {contact.email}
                   </a>
                 </li>
-                <li>
-                  <a
-                    href={`tel:${contact.phone.replace(/\s+/g, "")}`}
-                    className="hover:text-aquora-primary transition-colors"
-                  >
-                    {contact.phone}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={`https://wa.me/${contact.whatsapp.replace(/[^\d]/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-aquora-primary transition-colors"
-                  >
-                    WhatsApp {contact.whatsapp}
-                  </a>
-                </li>
+                {hasRealPhone && (
+                  <li>
+                    <a
+                      href={`tel:${contact.phone.replace(/\s+/g, "")}`}
+                      className="hover:text-aquora-primary transition-colors"
+                    >
+                      {contact.phone}
+                    </a>
+                  </li>
+                )}
+                {hasRealWhatsapp && (
+                  <li>
+                    <a
+                      href={`https://wa.me/${contact.whatsapp.replace(/[^\d]/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:text-aquora-primary transition-colors"
+                    >
+                      WhatsApp {contact.whatsapp}
+                    </a>
+                  </li>
+                )}
                 <li className="pt-1 leading-relaxed">{contact.address}</li>
                 <li className="text-aquora-ink/70">{contact.hours}</li>
               </ul>

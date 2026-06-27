@@ -153,6 +153,7 @@ const Payment = ({
               <RadioGroup
                 value={selectedPaymentMethod}
                 onChange={(value: string) => setPaymentMethod(value)}
+                aria-label="Select a payment method"
               >
                 {availablePaymentMethods.map((paymentMethod) => (
                   <div key={paymentMethod.id}>

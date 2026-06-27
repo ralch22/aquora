@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { contact } from "@lib/aquora/brand"
+import { contact, hasRealWhatsapp } from "@lib/aquora/brand"
 
 const ITEMS = [
   { title: "Genuine, engineered equipment", sub: "Specified to real performance standards" },
@@ -35,7 +35,7 @@ export default function TrustStrip({ product }: { product: HttpTypes.StoreProduc
         ))}
       </ul>
 
-      {wa.length >= 8 && (
+      {hasRealWhatsapp && wa.length >= 8 && (
         <a
           href={`https://wa.me/${wa}?text=${msg}`}
           target="_blank"

@@ -1,4 +1,4 @@
-import { contact } from "@lib/aquora/brand"
+import { contact, hasRealPhone } from "@lib/aquora/brand"
 
 const POINTS = [
   {
@@ -40,8 +40,8 @@ export default function CheckoutAssurance() {
         Need help with your order?{" "}
         <a href={`mailto:${contact.email}`} className="text-aquora-primary hover:underline">
           {contact.email}
-        </a>{" "}
-        · {contact.phone}
+        </a>
+        {hasRealPhone ? <> · {contact.phone}</> : null}
       </div>
     </div>
   )

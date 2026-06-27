@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import { contact } from "@lib/aquora/brand"
+import { contact, hasRealPhone, hasRealWhatsapp } from "@lib/aquora/brand"
 import PageHeader from "../blog/_lib/page-header"
 import ContactForm from "./contact-form"
 
@@ -66,13 +66,15 @@ export default function ContactPage() {
                     href={`mailto:${contact.email}`}
                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>}
                   />
-                  <Row
-                    label="Phone"
-                    value={contact.phone}
-                    href={`tel:${contact.phone.replace(/\s+/g, "")}`}
-                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.6a16 16 0 0 0 6 6l1.2-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7A2 2 0 0 1 22 16.9Z" /></svg>}
-                  />
-                  {wa.length >= 8 && (
+                  {hasRealPhone && (
+                    <Row
+                      label="Phone"
+                      value={contact.phone}
+                      href={`tel:${contact.phone.replace(/\s+/g, "")}`}
+                      icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8.1 9.6a16 16 0 0 0 6 6l1.2-1.1a2 2 0 0 1 2.1-.5c.8.3 1.7.6 2.6.7A2 2 0 0 1 22 16.9Z" /></svg>}
+                    />
+                  )}
+                  {hasRealWhatsapp && wa.length >= 8 && (
                     <Row
                       label="WhatsApp"
                       value={contact.whatsapp}

@@ -51,3 +51,10 @@ export const contact = {
   "address": "Dubai Investment Park, Dubai, United Arab Emirates",
   "hours": "Sun-Thu, 8:00-18:00 GST"
 } as const;
+
+// A fake phone number is the worst trust-killer, so the all-zeros placeholders must NEVER
+// render. Components gate on these flags and fall back to email + a Contact CTA. The moment a
+// real number is set above (no run of 4+ zeros), phone/WhatsApp light up everywhere.
+const _digits = (n: string) => n.replace(/\D/g, "")
+export const hasRealPhone = !/0000/.test(_digits(contact.phone))
+export const hasRealWhatsapp = !/0000/.test(_digits(contact.whatsapp))

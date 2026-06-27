@@ -39,7 +39,7 @@ const AskAqua = () => {
                   Which pump for a 60 m³ villa pool?
                 </div>
                 <div className="w-fit max-w-[88%] rounded-2xl rounded-bl-md bg-aquora-secondary/60 px-4 py-2.5 text-sm text-white/90">
-                  For ~60 m³ on a 4-hour turnover you want ≈15 m³/h. A variable-speed self-priming pump fits best — here are three options…
+                  For ~60 m³ on a 4-hour turnover you need ≈15 m³/h. A variable-speed self-priming pump is the efficient pick — the Speck BADU or Hayward TriStar VS both fit, with the specs and price ready.
                 </div>
               </div>
             </div>

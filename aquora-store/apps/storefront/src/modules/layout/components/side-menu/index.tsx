@@ -79,6 +79,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         AQU<span className="text-aquora-accent">O</span>RA
                       </LocalizedClientLink>
                       <button
+                        aria-label="Close menu"
                         data-testid="close-menu-button"
                         onClick={close}
                         className="text-white/80 hover:text-white transition-colors"

@@ -28,7 +28,7 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
               Find answers on our customer service page, or reach our team directly.
             </span>
           </div>
-          <UnderlineLink href="/customer-service">Customer Service</UnderlineLink>
+          <UnderlineLink href="/contact">Customer Service</UnderlineLink>
         </div>
       </div>
     </div>

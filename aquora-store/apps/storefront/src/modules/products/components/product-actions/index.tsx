@@ -194,14 +194,14 @@ export default function ProductActions({
 
         {selectedVariant && inStock && (
           <div className="flex items-center gap-3">
-            <span className="text-sm text-ui-fg-muted">Quantity</span>
+            <span className="text-sm text-aquora-muted">Quantity</span>
             <div className="inline-flex items-center rounded-md border border-black/15">
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1 || isAdding}
                 aria-label="Decrease quantity"
-                className="h-9 w-9 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
               >
                 −
               </button>
@@ -213,7 +213,7 @@ export default function ProductActions({
                 onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                 disabled={quantity >= 99 || isAdding}
                 aria-label="Increase quantity"
-                className="h-9 w-9 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
               >
                 +
               </button>

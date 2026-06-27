@@ -3,6 +3,7 @@
 import { Heading, Text, clx } from "@modules/common/components/ui"
 
 import PaymentButton from "../payment-button"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
@@ -40,10 +41,19 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
               <Text className="txt-medium-plus text-aquora-ink mb-1">
-                By clicking the Place Order button, you confirm that you have
-                read, understand and accept our Terms of Use, Terms of Sale and
-                Returns Policy and acknowledge that you have read Medusa
-                Store&apos;s Privacy Policy.
+                By placing your order you agree to Aquora&apos;s{" "}
+                <LocalizedClientLink href="/legal/terms" className="text-aquora-primary underline">
+                  Terms
+                </LocalizedClientLink>{" "}
+                &amp;{" "}
+                <LocalizedClientLink href="/legal/returns" className="text-aquora-primary underline">
+                  Returns Policy
+                </LocalizedClientLink>
+                , and acknowledge our{" "}
+                <LocalizedClientLink href="/legal/privacy" className="text-aquora-primary underline">
+                  Privacy Policy
+                </LocalizedClientLink>
+                .
               </Text>
             </div>
           </div>

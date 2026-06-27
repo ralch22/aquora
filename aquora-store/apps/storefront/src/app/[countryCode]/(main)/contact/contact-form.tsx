@@ -75,7 +75,7 @@ export default function ContactForm() {
       </div>
 
       {status === "error" && error && (
-        <p className="text-sm text-rose-600">{error}</p>
+        <p role="alert" className="text-sm text-rose-600">{error}</p>
       )}
 
       <Button type="submit" disabled={status === "sending"} isLoading={status === "sending"} size="large">

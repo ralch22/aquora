@@ -46,17 +46,19 @@ export default function Carousel({ children }: { children: React.ReactNode }) {
       </div>
       <button
         type="button"
-        aria-label="Previous"
+        aria-label="Scroll to previous items"
+        disabled={!canL}
         onClick={() => scroll(-1)}
-        className={`${arrow} -left-3 ${canL ? "" : "pointer-events-none opacity-0"}`}
+        className={`${arrow} -left-3 disabled:pointer-events-none disabled:opacity-0`}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
       </button>
       <button
         type="button"
-        aria-label="Next"
+        aria-label="Scroll to next items"
+        disabled={!canR}
         onClick={() => scroll(1)}
-        className={`${arrow} -right-3 ${canR ? "" : "pointer-events-none opacity-0"}`}
+        className={`${arrow} -right-3 disabled:pointer-events-none disabled:opacity-0`}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
       </button>

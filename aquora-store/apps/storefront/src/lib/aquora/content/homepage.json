@@ -6,20 +6,20 @@
   "hero_cta_secondary": "Request a quote",
   "stats": [
     {
-      "value": "5,000+",
+      "value": "5,900+",
       "label": "Products in stock"
     },
     {
+      "value": "30+",
+      "label": "Genuine brands stocked"
+    },
+    {
       "value": "48 hr",
-      "label": "Delivery across the UAE"
+      "label": "UAE-wide delivery"
     },
     {
-      "value": "15+ yrs",
-      "label": "Serving Gulf projects"
-    },
-    {
-      "value": "1,200+",
-      "label": "Pools & water features equipped"
+      "value": "75",
+      "label": "Equipment categories"
     }
   ],
   "sections": [
@@ -37,7 +37,7 @@
     },
     {
       "heading": "Expert support & real warranty",
-      "body": "Our team has commissioned and serviced Gulf water systems for over fifteen years, so the advice you get is practical and proven. Every product carries a clear manufacturer warranty, backed locally by Aquora. When you need spares, sizing help or troubleshooting, you reach a specialist who knows the equipment — not a call centre."
+      "body": "Our team commissions and services Gulf water systems day in, day out, so the advice you get is practical and proven. Every product carries a clear manufacturer warranty, backed locally by Aquora. When you need spares, sizing help or troubleshooting, you reach a specialist who knows the equipment — not a call centre."
     }
   ],
   "trust_signals": [

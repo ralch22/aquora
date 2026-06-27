@@ -21,7 +21,7 @@ const BrandStrip = () => {
             <LocalizedClientLink
               key={name}
               href={`/search?brand=${encodeURIComponent(name)}`}
-              className="font-heading text-lg font-bold tracking-tight text-aquora-ink/35 transition-colors duration-300 hover:text-aquora-primary small:text-xl"
+              className="font-heading text-lg font-bold tracking-tight text-aquora-ink/70 transition-colors duration-300 hover:text-aquora-primary small:text-xl"
             >
               {name}
             </LocalizedClientLink>

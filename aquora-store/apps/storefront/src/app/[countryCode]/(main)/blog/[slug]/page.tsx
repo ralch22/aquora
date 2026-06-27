@@ -33,9 +33,9 @@ function isValidSlug(slug: string): boolean {
   return listBlogSlugs().includes(slug)
 }
 
-export function generateStaticParams() {
-  return listBlogSlugs().map((slug) => ({ slug }))
-}
+// NOTE: no generateStaticParams — it forces static generation of this route, which conflicts
+// with the (main) layout's dynamic cookie usage (cart) and throws DYNAMIC_SERVER_USAGE (500
+// on every article). Rendering dynamically (like the /legal/[slug] route) avoids that.
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>

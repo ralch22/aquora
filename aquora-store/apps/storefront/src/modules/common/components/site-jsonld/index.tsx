@@ -1,4 +1,4 @@
-import { brand, contact } from "@lib/aquora/brand"
+import { brand, contact, hasRealPhone } from "@lib/aquora/brand"
 import { getBaseURL } from "@lib/util/env"
 
 // Sitewide structured data: Organization (entity/knowledge-panel) + WebSite with a
@@ -14,7 +14,7 @@ export default function SiteJsonLd() {
     logo: `${base}/favicon.ico`,
     description: brand.positioning,
     email: contact.email,
-    telephone: contact.phone,
+    ...(hasRealPhone ? { telephone: contact.phone } : {}),
     address: {
       "@type": "PostalAddress",
       streetAddress: "Dubai Investment Park",
@@ -26,7 +26,7 @@ export default function SiteJsonLd() {
       "@type": "ContactPoint",
       contactType: "sales",
       email: contact.email,
-      telephone: contact.phone,
+      ...(hasRealPhone ? { telephone: contact.phone } : {}),
       areaServed: "AE",
       availableLanguage: ["en", "ar"],
     },
