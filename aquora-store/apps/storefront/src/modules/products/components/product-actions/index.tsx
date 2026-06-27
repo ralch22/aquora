@@ -241,6 +241,22 @@ export default function ProductActions({
             ? "Out of stock"
             : "Add to cart"}
         </Button>
+
+        {selectedVariant && inStock && (
+          <ul className="mt-4 flex flex-col gap-2 text-xs text-aquora-muted">
+            <li className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+              In stock — ships within 48 hours across the UAE
+            </li>
+            <li className="flex items-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="shrink-0 text-aquora-primary" aria-hidden>
+                <path d="M8 1.5 3 3.5v4c0 3 2.2 5.2 5 6.5 2.8-1.3 5-3.5 5-6.5v-4L8 1.5Z" strokeLinejoin="round" />
+              </svg>
+              Genuine product · manufacturer warranty · easy returns
+            </li>
+          </ul>
+        )}
+
         <MobileActions
           product={product}
           variant={selectedVariant}
