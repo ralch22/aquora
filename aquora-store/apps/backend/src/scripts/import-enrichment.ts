@@ -9,7 +9,7 @@ import fs from "fs";
 // Mirrors import-specs.ts (exact + normalized-handle matching).
 const ENRICH_PATH = process.env.ENRICH_PATH || "/Users/admin/Documents/aquora/data/enrichment.json";
 
-type Enrichment = { overview?: string; features?: string[]; idealFor?: string; __error?: string };
+type Enrichment = { overview?: string; features?: string[]; idealFor?: string; details?: string; __error?: string };
 
 export default async function importEnrichment({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -54,6 +54,7 @@ export default async function importEnrichment({ container }: { container: Medus
           overview: e!.overview,
           features: e!.features!.slice(0, 6),
           idealFor: e!.idealFor || "",
+          details: e!.details || (p.metadata as any)?.details || "",
         },
       }));
 

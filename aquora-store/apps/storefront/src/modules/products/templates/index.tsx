@@ -8,7 +8,6 @@ import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import ProductJsonLd from "@modules/products/components/product-jsonld"
 import TrustStrip from "@modules/products/components/trust-strip"
-import SpecTable from "@modules/products/components/spec-table"
 import KeyFeatures from "@modules/products/components/key-features"
 import FrequentlyBoughtTogether from "@modules/products/components/frequently-bought-together"
 import Reveal from "@modules/common/components/reveal"
@@ -66,9 +65,6 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <TrustStrip product={product} />
         </div>
       </div>
-      <Reveal>
-        <SpecTable product={product} />
-      </Reveal>
       <Reveal>
         <div className="content-container my-16 small:my-32" data-testid="related-products-container">
           <Suspense fallback={<SkeletonRelatedProducts />}>

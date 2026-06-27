@@ -237,7 +237,85 @@ async function runCategories() {
   console.log(`DONE categories: ${Object.keys(result).length} -> ${OUT.pathname}`)
 }
 
+// ---- richer "details" body (additive; preserves overview/features/idealFor) -
+const SYSTEM_DETAILS =
+  `You are a senior product copywriter for Aquora, a premium UAE/GCC supplier of pool, spa, pond and fountain equipment. ` +
+  `Write ORIGINAL, factual, on-brand long-form copy in clear UAE English. You are given ONLY structured facts ` +
+  `(title, brand, category, specification name/value pairs). Write strictly from those facts. NEVER invent specifications, ` +
+  `model numbers, certifications, warranties, prices or performance claims that are not in the facts. ` +
+  `No filler ("contact our team", "bulk pricing"), no headings, no bullet lists, no superlatives. Return ONLY valid minified JSON.`
+
+function detailsUser(title, brand, leaf, specs) {
+  const specLines = (specs || []).map((s) => `- ${s.name}: ${s.value}`).join("\n") || "- (none provided)"
+  return (
+    `FACTS\n` +
+    `Title: ${title}\n` +
+    `Brand: ${brand || "unspecified"}\n` +
+    `Category: ${leaf || "Pool & spa equipment"}\n` +
+    `Specifications:\n${specLines}\n\n` +
+    `Write JSON with exactly this key:\n` +
+    `{"details": "..."}\n` +
+    `- details: TWO paragraphs separated by a blank line (\\n\\n), ~120-180 words total. ` +
+    `Paragraph 1: what this product is and how it works, referencing the real specs (flow, power, pool volume, voltage, connection, dimensions). ` +
+    `Paragraph 2: where it fits in a pool/spa/pond/fountain system, what it pairs with, and practical selection/installation considerations implied by the specs. ` +
+    `Specific to THIS product. No bullets, no headings, no call-to-action, no invented facts.`
+  )
+}
+
+function validDetails(o) {
+  return o && typeof o.details === "string" && o.details.length >= 150 && o.details.length <= 1600
+}
+
+async function runDetails() {
+  const catalog = readJson("catalog-raw.json")
+  const specs = readJson("specs.json")
+  const cats = readJson("categories.json")
+  const OUT = dataUrl("enrichment.json")
+  const result = fs.existsSync(OUT) ? readJson("enrichment.json") : {}
+
+  // Additive: only products that have a base enrichment but no `details` yet
+  // (FORCE re-generates details for all). Never touches overview/features/idealFor.
+  const pending = catalog.filter((p) => {
+    const e = result[p.handle]
+    return e && !e.__error && (FORCE || !e.details)
+  }).slice(0, Number.isFinite(LIMIT) ? LIMIT : undefined)
+
+  console.log(`details: ${pending.length} to generate (concurrency ${CONCURRENCY})`)
+  let done = 0, ok = 0, err = 0
+  const queue = [...pending]
+
+  async function worker() {
+    while (queue.length) {
+      const p = queue.shift()
+      const leaf = (cats[p.handle] || []).slice(-1)[0]?.name || ""
+      const brand = brandFromTitle(p.name)
+      try {
+        let text = await gen(SYSTEM_DETAILS, detailsUser(p.name, brand, leaf, specs[p.handle]), 500)
+        let obj = parseJson(text)
+        if (!validDetails(obj)) {
+          text = await gen(SYSTEM_DETAILS, detailsUser(p.name, brand, leaf, specs[p.handle]) + `\nReturn ONLY the JSON object with the single "details" key.`, 500)
+          obj = parseJson(text)
+        }
+        if (validDetails(obj) && result[p.handle]) {
+          result[p.handle].details = obj.details.trim() // MERGE — preserves base fields
+          ok++
+        } else { err++ }
+      } catch { err++ }
+      done++
+      if (done % 100 === 0) {
+        fs.writeFileSync(OUT, JSON.stringify(result))
+        console.log(`[${done}/${pending.length}] ok=${ok} err=${err}`)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker))
+  fs.writeFileSync(OUT, JSON.stringify(result))
+  const withDetails = Object.values(result).filter((v) => v && v.details).length
+  console.log(`DONE details: ok=${ok} err=${err} | ${withDetails} products now have details -> ${OUT.pathname}`)
+}
+
 // ---- main -------------------------------------------------------------------
 await assertIdentity()
 if (MODE === "categories") await runCategories()
+else if (MODE === "details") await runDetails()
 else await runProducts()

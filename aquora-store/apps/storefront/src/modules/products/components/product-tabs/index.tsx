@@ -42,38 +42,39 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
 }
 
 const ProductInfoTab = ({ product }: ProductTabsProps) => {
+  const md = (product.metadata as any) || {}
+  const details = (md.details as string | undefined) || product.description
+  const specs = (md.specs as { name: string; value: string }[]) || []
+
   return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Material</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Country of origin</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Type</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
+    <div className="py-6">
+      {details && (
+        <div className="mb-7 max-w-2xl whitespace-pre-line text-sm leading-relaxed text-ui-fg-subtle">
+          {details}
         </div>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Weight</span>
-            <p>{product.weight ? `${product.weight} g` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Dimensions</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length}L x ${product.width}W x ${product.height}H`
-                : "-"}
-            </p>
-          </div>
+      )}
+
+      {specs.length > 0 && (
+        <div className="overflow-hidden rounded-large border border-black/10">
+          <dl className="divide-y divide-black/5">
+            {specs.map((s, i) => (
+              <div
+                key={`${s.name}-${i}`}
+                className="grid grid-cols-[1fr_1.2fr] gap-4 px-5 py-3 odd:bg-aquora-surface/60"
+              >
+                <dt className="text-sm text-aquora-muted">{s.name}</dt>
+                <dd className="text-sm font-semibold text-aquora-ink">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-      </div>
+      )}
+
+      {!details && !specs.length && (
+        <p className="text-small-regular text-ui-fg-subtle">
+          Detailed specifications available on request.
+        </p>
+      )}
     </div>
   )
 }
