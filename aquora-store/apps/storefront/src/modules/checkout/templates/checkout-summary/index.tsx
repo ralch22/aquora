@@ -1,25 +1,23 @@
-import { Heading } from "@modules/common/components/ui"
-
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import DiscountCode from "@modules/checkout/components/discount-code"
 import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
 import FreeDeliveryProgress from "@modules/cart/components/free-delivery"
 import CheckoutAssurance from "@modules/checkout/components/assurance"
+import SectionShell from "@modules/common/components/section-shell"
 import { HttpTypes } from "@medusajs/types"
 
 const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
   return (
-    <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0 ">
-      <div className="w-full bg-white flex flex-col">
-        <Divider className="my-6 small:hidden" />
-        <Heading
-          level="h2"
-          className="flex flex-row text-3xl-regular items-baseline"
-        >
-          In your Cart
-        </Heading>
-        <Divider className="my-6" />
+    <div className="sticky top-24 flex flex-col-reverse gap-y-6 py-8 small:flex-col small:py-0">
+      <SectionShell>
+        <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
+          Order summary
+        </span>
+        <h2 className="mt-2 font-heading text-xl font-bold tracking-tight text-aquora-ink">In your cart</h2>
+
+        <Divider className="my-5" />
         <CartTotals totals={cart} />
         <div className="my-4">
           <FreeDeliveryProgress cart={cart} />
@@ -29,7 +27,7 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
           <DiscountCode cart={cart} />
         </div>
         <CheckoutAssurance />
-      </div>
+      </SectionShell>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { addToCart } from "@lib/data/cart"
+import { trackAddToCart, trackViewItem } from "@lib/analytics"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -126,6 +127,17 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
+  // GA4 view_item once per product view
+  useEffect(() => {
+    trackViewItem({
+      id: product.id,
+      name: product.title,
+      price: (selectedVariant as any)?.calculated_price?.calculated_amount,
+      category: (product as any).categories?.[0]?.name,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
+
   const actionsRef = useRef<HTMLDivElement>(null)
 
   const inView = useIntersection(actionsRef, "0px")
@@ -140,6 +152,14 @@ export default function ProductActions({
       variantId: selectedVariant.id,
       quantity,
       countryCode,
+    })
+
+    trackAddToCart({
+      id: selectedVariant.id,
+      name: product.title,
+      price: (selectedVariant as any)?.calculated_price?.calculated_amount,
+      quantity,
+      category: (product as any).categories?.[0]?.name,
     })
 
     setIsAdding(false)

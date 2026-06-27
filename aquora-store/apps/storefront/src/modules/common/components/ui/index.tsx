@@ -10,7 +10,7 @@ import {
   ThHTMLAttributes,
 } from "react"
 
-// TODO: Add Toaster component back when needed for notifications
+// Toaster lives in @modules/common/components/toast (self-built; mounted in layouts).
 
 // Re-export clsx as clx for compatibility
 export { clsx as clx }
@@ -42,7 +42,7 @@ export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(
       <Component
         ref={ref}
         className={clsx(
-          "font-semibold",
+          "font-heading font-bold tracking-tight text-aquora-ink",
           Component === "h1" && "text-3xl",
           Component === "h2" && "text-2xl",
           Component === "h3" && "text-xl",
@@ -82,19 +82,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={clsx(
-          "inline-flex gap-2 items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-          variant === "primary" && "bg-black text-white hover:bg-gray-800",
+          "inline-flex gap-2 items-center justify-center rounded-full font-semibold transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aquora-primary/40 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+          variant === "primary" && "bg-aquora-primary text-white hover:bg-aquora-secondary hover:-translate-y-px",
           variant === "secondary" &&
-            "bg-white text-black border border-gray-200 hover:bg-gray-50",
-          variant === "transparent" && "bg-transparent hover:bg-gray-100",
-          size === "small" && "h-8 px-3 text-sm",
-          size === "medium" && "h-10 px-4",
-          size === "large" && "h-12 px-6 text-lg",
+            "bg-white text-aquora-ink border border-black/10 hover:border-aquora-primary/40 hover:text-aquora-primary",
+          variant === "transparent" && "bg-transparent text-aquora-primary hover:bg-aquora-surface",
+          size === "small" && "h-8 px-4 text-sm",
+          size === "medium" && "h-10 px-5",
+          size === "large" && "h-12 px-7 text-base",
           className
         )}
         {...props}
       >
-        {isLoading ? "Loading..." : children}
+        {isLoading ? (
+          <span className="inline-flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          </span>
+        ) : (
+          children
+        )}
       </button>
     )
   }
@@ -109,7 +115,7 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(
     return (
       <div
         ref={ref}
-        className={clsx("bg-white rounded-lg p-4", className)}
+        className={clsx("bg-white rounded-2xl border border-black/[0.06] p-4", className)}
         {...props}
       >
         {children}
@@ -130,13 +136,13 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={clsx(
-          "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium",
-          color === "green" && "bg-green-100 text-green-700",
-          color === "red" && "bg-red-100 text-red-700",
-          color === "blue" && "bg-blue-100 text-blue-700",
-          color === "orange" && "bg-orange-100 text-orange-700",
-          color === "grey" && "bg-gray-100 text-gray-700",
-          color === "purple" && "bg-purple-100 text-purple-700",
+          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+          color === "green" && "bg-aquora-primary/10 text-aquora-primary",
+          color === "red" && "bg-rose-100 text-rose-700",
+          color === "blue" && "bg-aquora-primary/10 text-aquora-primary",
+          color === "orange" && "bg-aquora-accent/15 text-aquora-accentdark",
+          color === "grey" && "bg-aquora-surface text-aquora-muted",
+          color === "purple" && "bg-aquora-surface text-aquora-ink",
           className
         )}
         {...props}
@@ -157,7 +163,7 @@ export const IconBadge = forwardRef<HTMLSpanElement, IconBadgeProps>(
       <span
         ref={ref}
         className={clsx(
-          "inline-flex items-center justify-center rounded-full bg-gray-100 p-1",
+          "inline-flex items-center justify-center rounded-full bg-aquora-surface text-aquora-primary p-1",
           className
         )}
         {...props}
@@ -178,7 +184,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          "inline-flex items-center justify-center rounded-md p-2 hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2",
+          "inline-flex items-center justify-center rounded-lg p-2 text-aquora-ink hover:bg-aquora-surface hover:text-aquora-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aquora-primary/40",
           className
         )}
         {...props}
@@ -198,7 +204,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <label
         ref={ref}
-        className={clsx("text-sm font-medium", className)}
+        className={clsx("text-sm font-medium text-aquora-ink", className)}
         {...props}
       >
         {children}
@@ -221,7 +227,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={clsx(
-            "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-11 w-full rounded-xl border border-black/[0.08] bg-white px-3.5 py-2 text-sm text-aquora-ink placeholder:text-aquora-muted/60 transition-colors hover:border-black/15 focus:border-aquora-primary focus:outline-none focus:ring-2 focus:ring-aquora-primary/20 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
@@ -292,7 +298,7 @@ const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
       <tr
         ref={ref}
         className={clsx(
-          "border-b transition-colors hover:bg-gray-50",
+          "border-b border-black/[0.06] transition-colors hover:bg-aquora-surface",
           className
         )}
         {...props}
@@ -312,7 +318,7 @@ const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(
       <th
         ref={ref}
         className={clsx(
-          "h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0",
+          "h-12 px-4 text-left align-middle font-medium text-aquora-muted [&:has([role=checkbox])]:pr-0",
           className
         )}
         {...props}
@@ -384,7 +390,7 @@ const RadioGroupItem = forwardRef<HTMLInputElement, RadioGroupItemProps>(
           type="radio"
           id={id}
           className={clsx(
-            "h-4 w-4 border-gray-300 text-gray-900 focus:ring-gray-900",
+            "h-4 w-4 border-black/20 text-aquora-primary focus:ring-aquora-primary/40",
             className
           )}
           {...props}
@@ -414,7 +420,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           type="checkbox"
           id={id}
           className={clsx(
-            "h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900",
+            "h-4 w-4 rounded border-black/20 text-aquora-primary focus:ring-aquora-primary/40",
             className
           )}
           {...props}

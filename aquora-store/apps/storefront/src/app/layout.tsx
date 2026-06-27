@@ -1,6 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import SiteJsonLd from "@modules/common/components/site-jsonld"
+import GAScript from "@modules/analytics/ga-script"
 import "styles/globals.css"
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       </head>
       <body>
         <SiteJsonLd />
+        <GAScript />
         <main className="relative">{props.children}</main>
       </body>
     </html>

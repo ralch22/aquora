@@ -16,20 +16,18 @@ const Register = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(signup, null)
 
   return (
-    <div
-      className="max-w-sm flex flex-col items-center"
-      data-testid="register-page"
-    >
-      <h1 className="text-large-semi uppercase mb-6">
-        Become a Aquora Member
-      </h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-4">
-        Create your Aquora Member profile, and get access to an enhanced
-        shopping experience.
+    <div className="w-full" data-testid="register-page">
+      <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
+        <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
+        Join Aquora
+      </span>
+      <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-aquora-ink">Create your account</h1>
+      <p className="mt-2 mb-6 text-aquora-muted">
+        Track orders, save addresses and check out faster.
       </p>
       {message?.state === "verification_required" && (
         <div
-          className="w-full mb-4 text-center text-base-regular text-ui-fg-base bg-ui-bg-subtle border border-ui-border-base rounded-rounded p-4"
+          className="w-full mb-4 text-base-regular text-aquora-ink bg-aquora-surface border border-black/[0.06] rounded-2xl p-4"
           data-testid="register-verification-message"
         >
           We sent a verification link to <strong>{message.email}</strong>.
@@ -80,19 +78,13 @@ const Register = ({ setCurrentView }: Props) => {
           error={message?.state === "error" ? message.error : null}
           data-testid="register-error"
         />
-        <span className="text-center text-ui-fg-base text-small-regular mt-6">
+        <span className="mt-5 block text-sm text-aquora-muted">
           By creating an account, you agree to Aquora&apos;s{" "}
-          <LocalizedClientLink
-            href="/content/privacy-policy"
-            className="underline"
-          >
+          <LocalizedClientLink href="/content/privacy-policy" className="font-medium text-aquora-primary hover:underline">
             Privacy Policy
           </LocalizedClientLink>{" "}
           and{" "}
-          <LocalizedClientLink
-            href="/content/terms-of-use"
-            className="underline"
-          >
+          <LocalizedClientLink href="/content/terms-of-use" className="font-medium text-aquora-primary hover:underline">
             Terms of Use
           </LocalizedClientLink>
           .

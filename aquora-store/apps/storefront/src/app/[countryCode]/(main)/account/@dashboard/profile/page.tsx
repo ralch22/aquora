@@ -23,12 +23,15 @@ export default async function Profile() {
 
   return (
     <div className="w-full" data-testid="profile-page-wrapper">
-      <div className="mb-8 flex flex-col gap-y-4">
-        <h1 className="text-2xl-semi">Profile</h1>
-        <p className="text-base-regular">
-          View and update your profile information, including your name, email,
-          and phone number. You can also update your billing address, or change
-          your password.
+      <div className="mb-8 flex flex-col gap-y-3">
+        <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
+          Your account
+        </span>
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-aquora-ink">Profile</h1>
+        <p className="max-w-xl text-aquora-muted">
+          View and update your name, phone number and billing address. Your email is
+          used to sign in.
         </p>
       </div>
       <div className="flex flex-col gap-y-8 w-full">
@@ -47,5 +50,5 @@ export default async function Profile() {
 }
 
 const Divider = () => {
-  return <div className="w-full h-px bg-gray-200" />
+  return <div className="w-full h-px bg-black/[0.06]" />
 }

@@ -40,7 +40,7 @@ const AccountNav = ({
           </LocalizedClientLink>
         ) : (
           <>
-            <div className="text-xl-semi mb-4 px-8">
+            <div className="font-heading text-xl font-bold tracking-tight text-aquora-ink mb-4 px-8">
               Hello {customer?.first_name}
             </div>
             <div className="text-base-regular">
@@ -48,7 +48,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-black/[0.06] px-8"
                     data-testid="profile-link"
                   >
                     <>
@@ -63,7 +63,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-black/[0.06] px-8"
                     data-testid="addresses-link"
                   >
                     <>
@@ -78,7 +78,7 @@ const AccountNav = ({
                 <li>
                   <LocalizedClientLink
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className="flex items-center justify-between py-4 border-b border-black/[0.06] px-8"
                     data-testid="orders-link"
                   >
                     <div className="flex items-center gap-x-2">
@@ -91,7 +91,7 @@ const AccountNav = ({
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
+                    className="flex items-center justify-between py-4 border-b border-black/[0.06] px-8 w-full"
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
@@ -108,59 +108,32 @@ const AccountNav = ({
         )}
       </div>
       <div className="hidden small:block" data-testid="account-nav">
-        <div>
-          <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
-          </div>
-          <div className="text-base-regular">
-            <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
-              <li>
-                <AccountNavLink
-                  href="/account"
-                  route={route!}
-                  data-testid="overview-link"
-                >
-                  Overview
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/profile"
-                  route={route!}
-                  data-testid="profile-link"
-                >
-                  Profile
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/addresses"
-                  route={route!}
-                  data-testid="addresses-link"
-                >
-                  Addresses
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/orders"
-                  route={route!}
-                  data-testid="orders-link"
-                >
-                  Orders
-                </AccountNavLink>
-              </li>
-              <li className="text-grey-700">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  data-testid="logout-button"
-                >
-                  Log out
-                </button>
-              </li>
-            </ul>
-          </div>
+        <div className="rounded-[1.4rem] border border-black/[0.06] bg-white p-3 shadow-[0_22px_44px_-30px_rgba(11,31,36,0.18)]">
+          <p className="px-3 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-aquora-muted">Account</p>
+          <ul className="flex flex-col gap-1">
+            <li>
+              <AccountNavLink href="/account" route={route!} icon={<User size={18} />} data-testid="overview-link">Overview</AccountNavLink>
+            </li>
+            <li>
+              <AccountNavLink href="/account/profile" route={route!} icon={<User size={18} />} data-testid="profile-link">Profile</AccountNavLink>
+            </li>
+            <li>
+              <AccountNavLink href="/account/addresses" route={route!} icon={<MapPin size={18} />} data-testid="addresses-link">Addresses</AccountNavLink>
+            </li>
+            <li>
+              <AccountNavLink href="/account/orders" route={route!} icon={<Package size={18} />} data-testid="orders-link">Orders</AccountNavLink>
+            </li>
+          </ul>
+          <div className="my-2 h-px bg-black/[0.06]" />
+          <button
+            type="button"
+            onClick={handleLogout}
+            data-testid="logout-button"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-aquora-muted transition-colors hover:bg-rose-50 hover:text-rose-600"
+          >
+            <ArrowRightOnRectangle />
+            Log out
+          </button>
         </div>
       </div>
     </div>
@@ -171,6 +144,7 @@ type AccountNavLinkProps = {
   href: string
   route: string
   children: React.ReactNode
+  icon?: React.ReactNode
   "data-testid"?: string
 }
 
@@ -178,6 +152,7 @@ const AccountNavLink = ({
   href,
   route,
   children,
+  icon,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
   const { countryCode }: { countryCode: string } = useParams()
@@ -186,11 +161,15 @@ const AccountNavLink = ({
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
-      })}
+      className={clx(
+        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        active
+          ? "bg-aquora-surface text-aquora-primary"
+          : "text-aquora-ink/80 hover:bg-aquora-surface/60 hover:text-aquora-primary"
+      )}
       data-testid={dataTestId}
     >
+      {icon}
       {children}
     </LocalizedClientLink>
   )

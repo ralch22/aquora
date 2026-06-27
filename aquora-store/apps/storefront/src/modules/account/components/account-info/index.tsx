@@ -4,6 +4,7 @@ import { useEffect } from "react"
 
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { useFormStatus } from "react-dom"
+import { toast } from "@modules/common/components/toast"
 
 type AccountInfoProps = {
   label: string
@@ -38,17 +39,24 @@ const AccountInfo = ({
   useEffect(() => {
     if (isSuccess) {
       close()
+      toast.success(`${label} updated`)
     }
-  }, [isSuccess, close])
+  }, [isSuccess, close, label])
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(errorMessage)
+    }
+  }, [isError, errorMessage])
 
   return (
     <div className="text-small-regular" data-testid={dataTestid}>
       <div className="flex items-end justify-between">
         <div className="flex flex-col">
-          <span className="uppercase text-ui-fg-base">{label}</span>
+          <span className="text-sm font-medium text-aquora-muted">{label}</span>
           <div className="flex items-center flex-1 basis-0 justify-end gap-x-4">
             {typeof currentInfo === "string" ? (
-              <span className="font-semibold" data-testid="current-info">{currentInfo}</span>
+              <span className="mt-1 font-semibold text-aquora-ink" data-testid="current-info">{currentInfo}</span>
             ) : (
               currentInfo
             )}

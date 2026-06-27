@@ -13,17 +13,18 @@ const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(login, null)
 
   return (
-    <div
-      className="max-w-sm w-full flex flex-col items-center"
-      data-testid="login-page"
-    >
-      <h1 className="text-large-semi uppercase mb-6">Welcome back</h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-8">
-        Sign in to access an enhanced shopping experience.
+    <div className="w-full" data-testid="login-page">
+      <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
+        <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
+        Welcome back
+      </span>
+      <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-aquora-ink">Sign in</h1>
+      <p className="mt-2 mb-8 text-aquora-muted">
+        Access your orders, addresses and a faster checkout.
       </p>
       {message?.state === "verification_required" && (
         <div
-          className="w-full mb-6 text-center text-base-regular text-ui-fg-base bg-ui-bg-subtle border border-ui-border-base rounded-rounded p-4"
+          className="w-full mb-6 text-base-regular text-aquora-ink bg-aquora-surface border border-black/[0.06] rounded-2xl p-4"
           data-testid="login-verification-message"
         >
           We sent a verification link to <strong>{message.email}</strong>.
@@ -58,16 +59,15 @@ const Login = ({ setCurrentView }: Props) => {
           Sign in
         </SubmitButton>
       </form>
-      <span className="text-center text-ui-fg-base text-small-regular mt-6">
+      <span className="mt-6 block text-sm text-aquora-muted">
         Not a member?{" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-          className="underline"
+          className="font-semibold text-aquora-primary hover:underline"
           data-testid="register-button"
         >
           Join us
         </button>
-        .
       </span>
     </div>
   )
