@@ -78,14 +78,20 @@ const StripePaymentButton = ({
 
   const handlePayment = async () => {
     setSubmitting(true)
+    setErrorMessage(null)
 
-    if (!stripe || !elements || !card || !cart) {
+    const clientSecret = session?.data?.client_secret as string | undefined
+
+    if (!stripe || !elements || !card || !cart || !clientSecret) {
+      setErrorMessage(
+        "Payment isn't ready yet — please refresh the page and try again."
+      )
       setSubmitting(false)
       return
     }
 
     await stripe
-      .confirmCardPayment(session?.data.client_secret as string, {
+      .confirmCardPayment(clientSecret, {
         payment_method: {
           card: card,
           billing_details: {
@@ -109,25 +115,38 @@ const StripePaymentButton = ({
       .then(({ error, paymentIntent }) => {
         if (error) {
           const pi = error.payment_intent
-
+          // The card was actually charged even though Stripe returned an error
+          // envelope — complete the order and STOP, so a charged buyer is never
+          // shown an error that would tempt a retry (and a possible double charge).
           if (
-            (pi && pi.status === "requires_capture") ||
-            (pi && pi.status === "succeeded")
+            pi &&
+            (pi.status === "requires_capture" || pi.status === "succeeded")
           ) {
             onPaymentCompleted()
+            return
           }
-
-          setErrorMessage(error.message || null)
+          setErrorMessage(error.message || "Your payment could not be processed.")
+          setSubmitting(false)
           return
         }
 
         if (
-          (paymentIntent && paymentIntent.status === "requires_capture") ||
-          paymentIntent.status === "succeeded"
+          paymentIntent &&
+          (paymentIntent.status === "succeeded" ||
+            paymentIntent.status === "requires_capture")
         ) {
           return onPaymentCompleted()
         }
 
+        // Any other status (3-D Secure that didn't auto-resolve, processing,
+        // requires_payment_method, canceled) — give the buyer clear feedback
+        // instead of a silently dead Place-order button.
+        setErrorMessage(
+          paymentIntent?.status === "processing"
+            ? "Your payment is processing — we'll confirm your order shortly."
+            : "Your payment couldn't be completed. Please try another card."
+        )
+        setSubmitting(false)
         return
       })
   }
