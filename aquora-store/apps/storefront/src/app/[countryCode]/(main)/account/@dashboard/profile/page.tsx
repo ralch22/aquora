@@ -4,7 +4,6 @@ import ProfilePhone from "@modules/account//components/profile-phone"
 import ProfileBillingAddress from "@modules/account/components/profile-billing-address"
 import ProfileEmail from "@modules/account/components/profile-email"
 import ProfileName from "@modules/account/components/profile-name"
-import { notFound } from "next/navigation"
 import { listRegions } from "@lib/data/regions"
 import { retrieveCustomer } from "@lib/data/customer"
 
@@ -14,11 +13,13 @@ export const metadata: Metadata = {
 }
 
 export default async function Profile() {
-  const customer = await retrieveCustomer()
-  const regions = await listRegions()
+  const customer = await retrieveCustomer().catch(() => null)
+  const regions = await listRegions().catch(() => null)
 
+  // Logged-out: render nothing (the @login slot is shown by the layout) instead of
+  // throwing notFound() from this hidden parallel slot, which would crash the route.
   if (!customer || !regions) {
-    notFound()
+    return null
   }
 
   return (
