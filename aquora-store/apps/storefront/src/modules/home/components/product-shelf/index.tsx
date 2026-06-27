@@ -39,7 +39,7 @@ export default async function ProductShelf({
       queryParams: {
         category_id: [categoryId],
         limit,
-        fields: "thumbnail,*images,*variants.calculated_price,metadata",
+        fields: "id,handle,title,thumbnail,*images,*variants.calculated_price,metadata",
       } as any,
     })
     products = res.response.products
