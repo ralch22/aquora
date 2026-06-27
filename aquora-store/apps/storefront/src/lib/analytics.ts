@@ -23,16 +23,18 @@ const toItem = (i: Item) => ({
   ...(i.quantity != null ? { quantity: Number(i.quantity) } : {}),
 })
 
-// Push a GA4-style ecommerce event to the GTM dataLayer + mirror via gtag.
+// Queue an event into the dataLayer in BOTH formats so it survives early (pre-tag-load)
+// firing: the GTM ecommerce object (consumed by GTM) and the gtag arguments command
+// (replayed by GA4's gtag.js when it loads). Only one tag loads, so no double-count.
 function emit(event: string, ecommerce?: Params, extra?: Params) {
   if (typeof window === "undefined") return
-  if (Array.isArray(window.dataLayer)) {
-    window.dataLayer.push({ ecommerce: null }) // clear the previous ecommerce object
-    window.dataLayer.push({ event, ...(ecommerce ? { ecommerce } : {}), ...(extra || {}) })
-  }
-  if (typeof window.gtag === "function") {
-    window.gtag("event", event, { ...(ecommerce || {}), ...(extra || {}) })
-  }
+  const dl = (window.dataLayer = window.dataLayer || [])
+  const params = { ...(ecommerce || {}), ...(extra || {}) }
+  // GTM ecommerce event
+  dl.push({ ecommerce: null }) // clear the previous ecommerce object
+  dl.push({ event, ...(ecommerce ? { ecommerce } : {}), ...(extra || {}) })
+  // GA4 gtag-format command (queues until gtag.js loads, then GA4 processes it)
+  ;(dl as unknown[]).push(["event", event, params])
 }
 
 export function track(event: string, params?: Params) {

@@ -12,11 +12,13 @@ export default function GAScript() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (typeof window === "undefined") return
-    if (GTM_ID && Array.isArray(window.dataLayer)) {
-      window.dataLayer.push({ event: "page_view", page_path: pathname })
-    } else if (GA_ID && typeof window.gtag === "function") {
-      window.gtag("event", "page_view", { page_path: pathname })
+    if (typeof window === "undefined" || (!GTM_ID && !GA_ID)) return
+    const dl = (window.dataLayer = window.dataLayer || [])
+    if (GTM_ID) {
+      dl.push({ event: "page_view", page_path: pathname } as any)
+    } else {
+      // gtag-format command, queues until gtag.js loads
+      ;(dl as unknown[]).push(["event", "page_view", { page_path: pathname }])
     }
   }, [pathname])
 
