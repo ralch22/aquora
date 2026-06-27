@@ -3,27 +3,51 @@
 import Script from "next/script"
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
-import { GA_ID } from "@lib/analytics"
+import { GA_ID, GTM_ID } from "@lib/analytics"
 
-// GA4 loader — renders nothing (and ships no script) unless NEXT_PUBLIC_GA_ID is set.
-// Manual page_view on route change (send_page_view:false) so App-Router navigations
-// are tracked. anonymize_ip on; no PII anywhere.
+// Loads GTM when NEXT_PUBLIC_GTM_ID is set (preferred — GA4 + server-side live in the
+// container); otherwise falls back to direct GA4 when NEXT_PUBLIC_GA_ID is set. They are
+// mutually exclusive so GA4 is never double-counted. Renders nothing when neither is set.
 export default function GAScript() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!GA_ID || typeof window === "undefined" || typeof window.gtag !== "function") return
-    window.gtag("event", "page_view", { page_path: pathname })
+    if (typeof window === "undefined") return
+    if (GTM_ID && Array.isArray(window.dataLayer)) {
+      window.dataLayer.push({ event: "page_view", page_path: pathname })
+    } else if (GA_ID && typeof window.gtag === "function") {
+      window.gtag("event", "page_view", { page_path: pathname })
+    }
   }, [pathname])
 
-  if (!GA_ID) return null
+  if (GTM_ID) {
+    return (
+      <>
+        <Script id="gtm-init" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`}
+        </Script>
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+      </>
+    )
+  }
 
-  return (
-    <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-      <Script id="ga-init" strategy="afterInteractive">
-        {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{anonymize_ip:true,send_page_view:false});`}
-      </Script>
-    </>
-  )
+  if (GA_ID) {
+    return (
+      <>
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{anonymize_ip:true,send_page_view:false});`}
+        </Script>
+      </>
+    )
+  }
+
+  return null
 }
