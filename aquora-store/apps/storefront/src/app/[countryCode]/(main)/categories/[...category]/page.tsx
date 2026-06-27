@@ -55,13 +55,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Medusa Store"
-
-    const description = productCategory.description ?? `${title} category.`
+    const description =
+      productCategory.description ??
+      `${productCategory.name} — engineered pool, spa and fountain equipment from Aquora, delivered across the UAE and the GCC.`
 
     return {
-      title: `${title} | Medusa Store`,
-      description,
+      title: `${productCategory.name} | Aquora`,
+      description: description.slice(0, 160),
       alternates: {
         canonical: `${params.category.join("/")}`,
       },

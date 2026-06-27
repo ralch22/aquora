@@ -13,7 +13,14 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
   const brand = md.brand as string | undefined
   const overview = (md.overview as string | undefined) || product.description
   const idealFor = md.idealFor as string | undefined
-  const sku = (product.variants?.[0] as any)?.sku as string | undefined
+  const rawSku = (product.variants?.[0] as any)?.sku as string | undefined
+  // The catalogue's source SKUs were null, so the import used the slug as a fallback;
+  // only surface a genuine, short part-number-style reference (not the long slug).
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "")
+  const sku =
+    rawSku && rawSku.length <= 20 && norm(rawSku) !== norm(product.handle || "")
+      ? rawSku
+      : undefined
   const specs = topSpecChips(md.specs, product.title || "")
 
   return (
