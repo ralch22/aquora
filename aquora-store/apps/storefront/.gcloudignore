@@ -1,0 +1,11 @@
+# gcloud builds submit honors .gitignore by default, which excludes .env.production —
+# so NEXT_PUBLIC_* (incl. the Stripe publishable key) never got inlined at build, and
+# checkout white-screened. This file OVERRIDES that: it excludes only build junk and the
+# non-production env files, so .env.production reaches `next build` and the client gets
+# the public keys. Keep .env.production OUT of this list.
+.git
+node_modules
+.next
+*.log
+.env.local
+.env.development

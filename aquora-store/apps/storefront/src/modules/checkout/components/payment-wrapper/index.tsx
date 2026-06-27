@@ -28,11 +28,11 @@ const PaymentWrapper: React.FC<PaymentWrapperProps> = ({ cart, children }) => {
     (s) => s.status === "pending"
   )
 
-  if (
-    isStripeLike(paymentSession?.provider_id) &&
-    paymentSession &&
-    stripePromise
-  ) {
+  // Wrap in <Elements> whenever the session is Stripe-like — NOT gated on stripePromise.
+  // The payment button calls useStripe() for any Stripe-like session, and useStripe() throws
+  // (white-screens checkout) if there's no <Elements> ancestor. StripeWrapper tolerates a
+  // null stripePromise (stays inert), so this is safe even if the key is somehow missing.
+  if (isStripeLike(paymentSession?.provider_id) && paymentSession) {
     return (
       <StripeWrapper
         paymentSession={paymentSession}

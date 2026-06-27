@@ -20,30 +20,18 @@ const StripeWrapper: React.FC<StripeWrapperProps> = ({
   stripePromise,
   children,
 }) => {
-  const options: StripeElementsOptions = {
-    clientSecret: paymentSession!.data?.client_secret as string | undefined,
-  }
-
-  if (!stripeKey) {
-    throw new Error(
-      "Stripe key is missing. Set NEXT_PUBLIC_STRIPE_KEY environment variable."
-    )
-  }
-
-  if (!stripePromise) {
-    throw new Error(
-      "Stripe promise is missing. Make sure you have provided a valid Stripe key."
-    )
-  }
-
-  if (!paymentSession?.data?.client_secret) {
-    throw new Error(
-      "Stripe client secret is missing. Cannot initialize Stripe."
-    )
-  }
+  // Never throw from here — this component wraps the whole checkout step, so a missing key
+  // or client_secret used to white-screen the entire page (useStripe() throws with no
+  // <Elements> ancestor). Instead always mount <Elements> (stripe may be null → it stays
+  // inert, useStripe() returns null, and StripePaymentButton disables itself + guards on
+  // !stripe). When the key IS present (normal prod), this behaves exactly as before.
+  const clientSecret = paymentSession?.data?.client_secret as string | undefined
+  const options: StripeElementsOptions | undefined = clientSecret
+    ? { clientSecret }
+    : undefined
 
   return (
-    <StripeContext.Provider value={true}>
+    <StripeContext.Provider value={!!stripePromise}>
       <Elements options={options} stripe={stripePromise}>
         {children}
       </Elements>
