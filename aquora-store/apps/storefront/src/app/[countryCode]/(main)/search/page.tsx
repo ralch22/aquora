@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { getProductVideo } from "@lib/aquora/videos"
 
 export const metadata: Metadata = {
   title: "Search — Aquora",
@@ -277,12 +278,20 @@ export default async function SearchPage(props: {
                 {products.map((p) => (
                   <li key={p.handle}>
                     <LocalizedClientLink href={`/products/${p.handle}`} className="group block">
-                      <div className="aspect-square bg-aquora-surface rounded-large overflow-hidden border border-black/5">
+                      <div className="relative aspect-square bg-aquora-surface rounded-large overflow-hidden border border-black/5">
                         {p.thumbnail ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.thumbnail} alt={p.title} className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105" />
                         ) : (
                           <div className="w-full h-full grid place-items-center text-aquora-muted text-xs">No image</div>
+                        )}
+                        {getProductVideo(p.handle) && (
+                          <span className="absolute bottom-2.5 right-2.5 flex items-center gap-1 rounded-full bg-aquora-secondary/85 py-0.5 pl-1.5 pr-2 text-[10px] font-semibold text-white backdrop-blur">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                            Video
+                          </span>
                         )}
                       </div>
                       <h3 className="mt-3 text-sm text-aquora-ink leading-snug line-clamp-2 group-hover:text-aquora-primary transition-colors">{p.title}</h3>
