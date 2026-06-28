@@ -8,6 +8,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
+import ExpressCheckout from "@modules/checkout/components/express-checkout"
 import Divider from "@modules/common/components/divider"
 import {
   Button,
@@ -146,13 +147,10 @@ const Payment = ({
       </div>
       <div>
         <div className={isOpen ? "block" : "hidden"}>
-          {/* ExpressCheckout (Apple/Google Pay) is DISABLED — it calls useStripe()
-              unconditionally and renders here (hidden) on every checkout step, before any
-              Stripe payment session exists, so it threw "no <Elements> provider" and
-              white-screened all of checkout. Wallets are owner-gated anyway (need backend
-              automaticPaymentMethods + the live domain registered in Stripe). Re-enable by
-              rendering <ExpressCheckout /> only inside the Stripe <Elements> context once
-              configured. The card path (StripeCardContainer) is independent and works. */}
+          {/* Apple Pay / Google Pay one-click. Mount-gated on `isOpen` so it only mounts on
+              the payment step, and it carries its OWN isolated <Elements> provider, so it
+              can never affect the card path or white-screen checkout (see express-checkout). */}
+          {isOpen && !paidByGiftcard && <ExpressCheckout cart={cart} />}
           {!paidByGiftcard && availablePaymentMethods?.length && (
             <>
               <RadioGroup
