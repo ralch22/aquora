@@ -18,5 +18,11 @@ WORKDIR /app/.medusa/server
 RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund
 
 ENV NODE_ENV=production
-# Cloud Run injects PORT; Medusa reads it. Start the server (DB is pre-migrated).
+# Start the built server. The DB is migrated OUT OF BAND, NOT on boot: a blocking `medusa
+# db:migrate` exceeds Cloud Run's 240s startup probe, and backgrounding it starves the single-CPU
+# instance so `start` also misses the probe. When a deploy adds/changes a module migration, apply
+# it via a short-lived Cloud Run Job attached to the same Cloud SQL instance + DATABASE_URL. The
+# Medusa migrate CLI bootstraps slowly and often hangs without exiting, so the reliable path is a
+# tiny `pg` script that runs the generated migration's raw SQL (idempotent CREATE TABLE IF NOT
+# EXISTS) and exits — see the review module's migration for the SQL.
 CMD ["npm", "run", "start"]

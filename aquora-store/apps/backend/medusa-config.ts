@@ -27,6 +27,12 @@ if (paymentProviders.length) {
   })
 }
 
+// Custom product-reviews module (moderation-first, verified-purchase aware).
+modules.push({ resolve: './src/modules/review' })
+
+// Custom product Q&A module (owner-answered, moderation-first).
+modules.push({ resolve: './src/modules/qa' })
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
