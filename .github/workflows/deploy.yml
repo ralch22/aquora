@@ -25,6 +25,7 @@ jobs:
     outputs:
       storefront: ${{ steps.decide.outputs.storefront }}
       backend: ${{ steps.decide.outputs.backend }}
+      migrations: ${{ steps.decide.outputs.migrations }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -36,17 +37,21 @@ jobs:
               - 'aquora-store/apps/storefront/**'
             backend:
               - 'aquora-store/apps/backend/**'
+            migrations:
+              - 'aquora-store/apps/backend/src/modules/**/migrations/**'
       - id: decide
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             case "${{ github.event.inputs.service }}" in
-              storefront) echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=false" >> $GITHUB_OUTPUT ;;
-              backend)    echo "storefront=false" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT ;;
-              *)          echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT ;;
+              storefront) echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=false" >> $GITHUB_OUTPUT; echo "migrations=false" >> $GITHUB_OUTPUT ;;
+              # Manual backend/both deploys re-run the migration job; it is idempotent, so a no-op when nothing is pending.
+              backend)    echo "storefront=false" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT; echo "migrations=true" >> $GITHUB_OUTPUT ;;
+              *)          echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT; echo "migrations=true" >> $GITHUB_OUTPUT ;;
             esac
           else
             echo "storefront=${{ steps.f.outputs.storefront }}" >> $GITHUB_OUTPUT
             echo "backend=${{ steps.f.outputs.backend }}" >> $GITHUB_OUTPUT
+            echo "migrations=${{ steps.f.outputs.migrations }}" >> $GITHUB_OUTPUT
           fi
 
   deploy-storefront:
@@ -98,9 +103,10 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_DEPLOY_SA }}
       - uses: google-github-actions/setup-gcloud@v2
-      - name: Build & deploy backend
+      - name: Build backend image
         run: |
           IMG=europe-west1-docker.pkg.dev/emerge-digital-web-7034/aquora/backend:${{ github.sha }}
+          echo "IMG=$IMG" >> "$GITHUB_ENV"
           BUILD_ID=$(gcloud builds submit aquora-store/apps/backend --tag "$IMG" \
             --machine-type=e2-highcpu-8 --timeout=1800 --async --format='value(id)')
           echo "Build $BUILD_ID submitted; polling..."
@@ -113,5 +119,28 @@ jobs:
             esac
             sleep 10
           done
+      # Out-of-band module migrations (WS0-PR5). Boot-time `medusa db:migrate` is unreliable here
+      # (240s startup probe + single-CPU starvation + CLI hangs — see the backend Dockerfile), so we
+      # apply pending migrations from a short-lived Cloud Run Job built from the SAME image, with the
+      # aquora-db Cloud SQL socket attached and DATABASE_URL pulled from Secret Manager (WS0-PR6).
+      # The runner (src/scripts/run-migrations.js) is a tiny idempotent `pg` script. This runs BEFORE
+      # the serving deploy so the new tables exist before the new revision takes traffic. Gated on
+      # migration files actually changing in the merged push.
+      - name: Apply backend migrations (out-of-band Cloud Run Job)
+        if: ${{ needs.changes.outputs.migrations == 'true' }}
+        run: |
+          gcloud run jobs deploy aquora-migrate \
+            --image "$IMG" \
+            --region europe-west1 \
+            --set-cloudsql-instances=emerge-digital-web-7034:europe-west1:aquora-db \
+            --set-secrets=DATABASE_URL=DATABASE_URL:latest \
+            --command=node \
+            --args=/app/src/scripts/run-migrations.js \
+            --max-retries=0 \
+            --task-timeout=600 \
+            --quiet
+          # --wait blocks until the task finishes; a non-zero exit from the runner fails this step.
+          gcloud run jobs execute aquora-migrate --region europe-west1 --wait
+      - name: Deploy backend (serving revision)
+        run: |
           gcloud run deploy aquora-backend --image "$IMG" --region europe-west1 --quiet
-          # If this push added a Medusa migration, run the out-of-band migration job (see AGENTS.md).

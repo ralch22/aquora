@@ -49,8 +49,15 @@ gcloud run deploy aquora-<svc> --image europe-west1-docker.pkg.dev/emerge-digita
 Boot-time migration is unreliable here (startup-probe timeout + CPU starvation; the Medusa `db:migrate` CLI hangs).
 Run module migrations as a **short-lived Cloud Run Job** from the backend image with the Cloud SQL instance attached
 (`--set-cloudsql-instances=emerge-digital-web-7034:europe-west1:aquora-db`), executing the generated `CREATE TABLE IF
-NOT EXISTS` SQL via a tiny `pg` script; delete the job + env file after. If a PR adds a migration, check that box in
-the PR template so the deploy step runs it.
+NOT EXISTS` SQL via a tiny `pg` script. The runner is
+[`aquora-store/apps/backend/src/scripts/run-migrations.js`](aquora-store/apps/backend/src/scripts/run-migrations.js):
+it discovers every `src/modules/*/migrations/Migration*` file, applies each up()'s SQL idempotently inside a
+transaction, records it in an `aquora_oob_migrations` tracking table (so re-runs are no-ops), and exits non-zero on
+failure. It needs only `DATABASE_URL` (no Medusa bootstrap, so it never hangs). Run it locally with
+`npm run migrate:oob`. On deploy, `.github/workflows/deploy.yml` runs it as the `aquora-migrate` Cloud Run Job
+(`node /app/src/scripts/run-migrations.js`, `DATABASE_URL` from Secret Manager) **before** the new backend revision
+serves traffic — but only when the merged push changed files under `*/migrations/`. If a PR adds a migration, check
+that box in the PR template.
 
 ## Verify
 Verify behaviour on **https://aquora.ae** after deploy — never assume. Trust screenshots over `getComputedStyle`
