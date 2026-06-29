@@ -1,0 +1,73 @@
+name: Deploy
+
+# Auto-deploy the changed service(s) to Cloud Run when a PR merges to main.
+# DORMANT until the owner finishes GCP Workload Identity setup and sets repo
+# variable DEPLOY_ENABLED=true (Settings → Secrets and variables → Actions → Variables)
+# plus secrets GCP_WIF_PROVIDER and GCP_DEPLOY_SA. Until then the deploy jobs skip (no-op).
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write   # required for keyless Workload Identity Federation
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      storefront: ${{ steps.f.outputs.storefront }}
+      backend: ${{ steps.f.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            storefront:
+              - 'aquora-store/apps/storefront/**'
+            backend:
+              - 'aquora-store/apps/backend/**'
+
+  deploy-storefront:
+    needs: changes
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && needs.changes.outputs.storefront == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & deploy storefront
+        run: |
+          IMG=europe-west1-docker.pkg.dev/emerge-digital-web-7034/aquora/storefront:${{ github.sha }}
+          gcloud builds submit aquora-store/apps/storefront --tag "$IMG" --machine-type=e2-highcpu-8 --timeout=1800
+          gcloud run deploy aquora-storefront --image "$IMG" --region europe-west1 --quiet
+
+  deploy-backend:
+    needs: changes
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Build & deploy backend
+        run: |
+          IMG=europe-west1-docker.pkg.dev/emerge-digital-web-7034/aquora/backend:${{ github.sha }}
+          gcloud builds submit aquora-store/apps/backend --tag "$IMG" --machine-type=e2-highcpu-8 --timeout=1800
+          gcloud run deploy aquora-backend --image "$IMG" --region europe-west1 --quiet
+          # If this push added a Medusa migration, run the out-of-band migration job (see AGENTS.md).
