@@ -1,5 +1,6 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
+import { getReviewAggregates } from "@lib/data/reviews"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductPreview from "@modules/products/components/product-preview"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -106,6 +107,9 @@ export default async function PaginatedProducts({
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
+  // One batched request for real review ratings across the whole grid (no per-card N+1).
+  const ratings = await getReviewAggregates(products.map((p) => p.id))
+
   return (
     <>
       <ul
@@ -115,7 +119,7 @@ export default async function PaginatedProducts({
         {products.flatMap((p, i) => {
           const card = (
             <li key={p.id}>
-              <ProductPreview product={p} region={region} />
+              <ProductPreview product={p} region={region} rating={ratings[p.id]} />
             </li>
           )
           // Inject the promo tile once, after the 4th product on the first page.

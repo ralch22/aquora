@@ -6,16 +6,21 @@ import PlaceholderImage from "@modules/common/icons/placeholder-image"
 import { getProductVideo } from "@lib/aquora/videos"
 import WishlistButton from "@modules/products/components/wishlist-button"
 import CompareButton from "@modules/products/components/compare-button"
+import type { ReviewAggregate } from "@lib/data/reviews"
 import PreviewPrice from "./price"
+import CardRating from "./card-rating"
 
 export default async function ProductPreview({
   product,
   isFeatured: _isFeatured,
   region: _region,
+  rating,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
+  // Real review aggregate, batch-fetched once per grid/rail. Omitted ⇒ no rating shown.
+  rating?: ReviewAggregate | null
 }) {
   const { cheapestPrice } = getProductPrice({ product })
   const brand = (product.metadata as any)?.brand as string | undefined
@@ -71,6 +76,7 @@ export default async function ProductPreview({
             <PreviewPrice price={cheapestPrice} />
           </div>
         )}
+        <CardRating rating={rating} />
       </div>
       </LocalizedClientLink>
     </div>

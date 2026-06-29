@@ -1,4 +1,5 @@
 import { listProducts } from "@lib/data/products"
+import { getReviewAggregates } from "@lib/data/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@modules/common/components/ui"
 
@@ -26,6 +27,9 @@ export default async function ProductRail({
     return null
   }
 
+  // One batched request for real review ratings across the rail (no per-card N+1).
+  const ratings = await getReviewAggregates(pricedProducts.map((p) => p.id))
+
   return (
     <div className="content-container py-12 small:py-24">
       <div className="flex justify-between mb-8">
@@ -38,7 +42,7 @@ export default async function ProductRail({
         {pricedProducts &&
           pricedProducts.map((product) => (
             <li key={product.id}>
-              <ProductPreview product={product} region={region} isFeatured />
+              <ProductPreview product={product} region={region} rating={ratings[product.id]} isFeatured />
             </li>
           ))}
       </ul>
