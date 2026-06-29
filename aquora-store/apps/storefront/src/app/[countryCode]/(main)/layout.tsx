@@ -1,5 +1,8 @@
 import { Metadata } from "next"
+import { cookies as nextCookies } from "next/headers"
 
+import { getAllAssignments, VISITOR_COOKIE } from "@lib/aquora/experiments"
+import ExperimentsProvider from "@modules/analytics/experiments-provider"
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getBaseURL } from "@lib/util/env"
@@ -20,6 +23,12 @@ export const metadata: Metadata = {
 export default async function PageLayout(props: { children: React.ReactNode }) {
   // Parallel — cart doesn't depend on customer; saves a round-trip on every page's TTFB.
   const [customer, cart] = await Promise.all([retrieveCustomer(), retrieveCart()])
+
+  // A/B harness: bucket SSR-stably from the aq_vid cookie (may be absent on a first visit,
+  // in which case the client establishes the id and recomputes — see ExperimentsProvider).
+  const visitorId = (await nextCookies()).get(VISITOR_COOKIE)?.value
+  const assignments = getAllAssignments(visitorId)
+
   let shippingOptions: StoreCartShippingOption[] = []
 
   if (cart) {
@@ -29,7 +38,7 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <ExperimentsProvider assignments={assignments} hasVisitorId={!!visitorId}>
       <Nav />
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
@@ -56,6 +65,6 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
       <CompareBar />
       <Toaster />
       <CookieConsent />
-    </>
+    </ExperimentsProvider>
   )
 }

@@ -15,6 +15,13 @@ export function getVisitorId(): string {
       v = "v_" + Math.random().toString(36).slice(2) + Date.now().toString(36)
       localStorage.setItem(VID_KEY, v)
     }
+    // Mirror the id into a cookie so the server can read it and bucket A/B experiments
+    // SSR-stably (the cookie may be missing on a brand-new visitor's very first request).
+    try {
+      if (!document.cookie.includes(`${VID_KEY}=`)) {
+        document.cookie = `${VID_KEY}=${v}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`
+      }
+    } catch {}
     return v
   } catch {
     return "anon"
