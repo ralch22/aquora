@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import { visualSearch } from "../../../lib/vision-search";
 import { getAccessToken } from "../../../lib/gcp-token";
-import { retailSearch } from "../../../lib/retail";
+import { retailSearch, writeUserEvent } from "../../../lib/retail";
 import { hydrateProducts, type Card } from "../../../lib/product-lookup";
 import { COMPLEMENTARY } from "../../../lib/complementary";
 import { lookupOrderStatus } from "../../../lib/order-status";
@@ -239,8 +239,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return (await sttTranscribe(b64, m)) || (await geminiTranscribe(b64, m));
   }
 
+  // Retail user-event signal (Phase 2): the queries the agent actually searched this turn.
+  // Fed back to Google Retail after the loop so assistant-driven discovery trains the model.
+  const searchQueries: string[] = [];
   async function dispatch(name: string, args: any): Promise<any> {
-    if (name === "search_products") return (await searchProducts(sanitizeQuery(args?.query) || message, Number(args?.max_price) || undefined)).map(slim);
+    if (name === "search_products") {
+      const q = sanitizeQuery(args?.query) || message;
+      if (q) searchQueries.push(q);
+      return (await searchProducts(q, Number(args?.max_price) || undefined)).map(slim);
+    }
     if (name === "get_product") return await getProductTool(args?.handle);
     if (name === "recommend_complementary") return (await recommendComplementary(args?.handle)).map(slim);
     if (name === "visual_search") return (await doVisualSearch()).map(slim);
@@ -300,6 +307,25 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     } catch {}
   };
 
+  // Phase 2: feed the assistant's OWN discovery back into Google Retail as user events, keyed by
+  // the shared visitorId — so the recommendation model learns from AI-driven search/views, not
+  // just storefront browsing. Fire-and-forget (never awaited; a Retail failure can't touch the
+  // chat reply). PII is masked off the query; never emit add-to-cart/purchase-complete here —
+  // those fire client-side on the real action to avoid double counting.
+  const emitRetailUserEvents = (suggestionHandles: string[]) => {
+    try {
+      for (const q of [...new Set(searchQueries.map((s) => maskPII(s).slice(0, 256)).filter(Boolean))]) {
+        void writeUserEvent("search", { visitorId, searchQuery: q });
+      }
+      const seen = new Set<string>();
+      for (const h of suggestionHandles) {
+        if (!h || seen.has(h)) continue;
+        seen.add(h);
+        void writeUserEvent("detail-page-view", { visitorId, productHandles: [h] });
+      }
+    } catch {}
+  };
+
   try {
     const token = await getAccessToken(); // Rami-scoped token (drift-proof, not ADC)
     let reply = "";
@@ -326,6 +352,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (!reply) reply = cardIndex.size ? "Here are some options from our catalogue that should fit." : "I couldn't find a confident match — would you like a free consultation with our engineers?";
     const cta = wantsCheckout(effectiveMessage) ? { type: "go_to_checkout" } : null;
     const suggestions = buildSuggestions(reply);
+    emitRetailUserEvents(suggestions.map((s) => s.handle));
     logSession({ ai: true, cta: cta?.type || null, nSuggestions: suggestions.length });
     res.json({ reply, suggestions, cta, ai: true, transcript: effectiveMessage });
   } catch (e: any) {
