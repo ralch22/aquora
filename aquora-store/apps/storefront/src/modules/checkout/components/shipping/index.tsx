@@ -192,7 +192,7 @@ const Shipping: React.FC<ShippingProps> = ({
                 Shipping method
               </span>
               <span className="mb-4 text-aquora-muted txt-medium">
-                How would you like you order delivered
+                How would you like your order delivered?
               </span>
             </div>
             <div data-testid="delivery-options-container">
@@ -269,8 +269,13 @@ const Shipping: React.FC<ShippingProps> = ({
                           <MedusaRadio
                             checked={option.id === shippingMethodId}
                           />
-                          <span className="text-base-regular">
-                            {option.name}
+                          <span className="flex flex-col">
+                            <span className="text-base-regular text-aquora-ink">
+                              {option.name}
+                            </span>
+                            <span className="text-xs text-aquora-muted">
+                              Dispatched within 48 hrs · delivered across the UAE
+                            </span>
                           </span>
                         </div>
                         <span className="justify-self-end text-aquora-ink">

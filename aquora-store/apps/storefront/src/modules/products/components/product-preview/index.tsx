@@ -4,6 +4,8 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import PlaceholderImage from "@modules/common/icons/placeholder-image"
 import { getProductVideo } from "@lib/aquora/videos"
+import WishlistButton from "@modules/products/components/wishlist-button"
+import CompareButton from "@modules/products/components/compare-button"
 import PreviewPrice from "./price"
 
 export default async function ProductPreview({
@@ -21,7 +23,11 @@ export default async function ProductPreview({
   const hasVideo = !!getProductVideo(product.handle)
 
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="group block" data-testid="product-wrapper">
+    <div className="group relative block" data-testid="product-wrapper">
+      {/* Heart + compare sit OUTSIDE the link — a <button> nested in an <a> still triggers navigation. */}
+      <WishlistButton handle={product.handle} floating />
+      <CompareButton handle={product.handle} floating />
+      <LocalizedClientLink href={`/products/${product.handle}`} className="block">
       {/* Double-bezel: outer shell + inner image core. object-contain so equipment is never cropped. */}
       <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] bg-white p-2 shadow-[0_1px_2px_rgba(11,31,36,0.04)] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1.5 group-hover:border-aquora-primary/25 group-hover:shadow-[0_24px_44px_-22px_rgba(14,110,115,0.28)]">
         <div className="relative aspect-square overflow-hidden rounded-[1.05rem] bg-gradient-to-b from-white to-aquora-surface">
@@ -66,6 +72,7 @@ export default async function ProductPreview({
           </div>
         )}
       </div>
-    </LocalizedClientLink>
+      </LocalizedClientLink>
+    </div>
   )
 }

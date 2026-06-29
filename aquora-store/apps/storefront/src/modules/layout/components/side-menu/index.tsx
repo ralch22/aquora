@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Popover, PopoverPanel, Transition } from "@headlessui/react"
 import useToggleState from "@lib/hooks/use-toggle-state"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
@@ -11,11 +12,13 @@ import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 import { categories } from "@lib/aquora/categories"
+import { categoryImage } from "@lib/aquora/category-images"
 
 
 const SideMenuItems = {
   Home: "/",
   Services: "/services",
+  "Pool Care": "/pool-care",
   About: "/about",
   Blog: "/blog",
   FAQ: "/faq",
@@ -120,18 +123,26 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         <p className="font-heading text-2xl leading-9 tracking-tight text-white">
                           Shop
                         </p>
-                        <ul className="mt-3 flex flex-col gap-2 border-l border-white/15 pl-4">
-                          {categories.map((cat) => (
-                            <li key={cat.handle}>
-                              <LocalizedClientLink
-                                href={`/categories/${cat.handle}`}
-                                className="block text-base text-white/80 hover:text-aquora-accent transition-colors duration-150"
-                                onClick={close}
-                              >
-                                {cat.name}
-                              </LocalizedClientLink>
-                            </li>
-                          ))}
+                        <ul className="mt-3 flex flex-col gap-1.5 border-l border-white/15 pl-4">
+                          {categories.map((cat) => {
+                            const img = categoryImage(cat.handle)
+                            return (
+                              <li key={cat.handle}>
+                                <LocalizedClientLink
+                                  href={`/categories/${cat.handle}`}
+                                  className="flex items-center gap-3 rounded-lg py-1 text-base text-white/80 hover:text-aquora-accent transition-colors duration-150"
+                                  onClick={close}
+                                >
+                                  <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90">
+                                    {img ? (
+                                      <Image src={img} alt="" width={36} height={36} quality={45} className="h-full w-full object-contain p-1" />
+                                    ) : null}
+                                  </span>
+                                  <span className="leading-tight">{cat.name}</span>
+                                </LocalizedClientLink>
+                              </li>
+                            )
+                          })}
                         </ul>
                       </li>
 

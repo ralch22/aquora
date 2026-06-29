@@ -1,15 +1,11 @@
 import { login } from "@lib/data/customer"
-import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useActionState } from "react"
 
-type Props = {
-  setCurrentView: (view: LOGIN_VIEW) => void
-}
-
-const Login = ({ setCurrentView }: Props) => {
+const Login = () => {
   const [message, formAction] = useActionState(login, null)
 
   return (
@@ -61,14 +57,13 @@ const Login = ({ setCurrentView }: Props) => {
       </form>
       <span className="mt-6 block text-sm text-aquora-muted">
         Not a member?{" "}
-        <button
-          type="button"
-          onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
+        <LocalizedClientLink
+          href="/account?view=register"
           className="font-semibold text-aquora-primary hover:underline"
           data-testid="register-button"
         >
           Join us
-        </button>
+        </LocalizedClientLink>
       </span>
     </div>
   )

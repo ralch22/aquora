@@ -2,6 +2,7 @@ import { Text } from "@modules/common/components/ui";
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import PremiumCta from "@modules/common/components/premium-cta"
+import PaymentTrustStrip from "@modules/common/components/payment-trust"
 import { brand, contact, hasRealPhone, hasRealWhatsapp } from "@lib/aquora/brand"
 import { categories } from "@lib/aquora/categories"
 
@@ -13,10 +14,13 @@ const companyLinks = [
 ]
 
 const supportLinks = [
+  { label: "Pool Care 101", href: "/pool-care" },
+  { label: "How-to & buying guides", href: "/guides" },
+  { label: "Dosing calculator", href: "/pool-dosing-calculator" },
+  { label: "Problem solver", href: "/pool-problem-solver" },
+  { label: "Sizing calculator", href: "/pool-sizing-guide" },
   { label: "FAQ", href: "/faq" },
   { label: "Shipping", href: "/legal/shipping" },
-  { label: "Returns & Refunds", href: "/legal/returns" },
-  { label: "Warranty & Spares", href: "/faq" },
 ]
 
 const legalLinks = [
@@ -181,6 +185,9 @@ export default async function Footer() {
             </div>
           </div>
         </div>
+
+        {/* Trust + payment reassurance strip */}
+        <PaymentTrustStrip />
 
         {/* Bottom bar */}
         <div className="flex flex-col gap-y-4 border-t border-black/5 py-6">

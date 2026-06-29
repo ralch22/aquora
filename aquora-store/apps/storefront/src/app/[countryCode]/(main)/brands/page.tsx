@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ImageBanner from "@modules/common/components/image-banner"
 import { brands } from "@lib/aquora/brands"
 
 export const metadata: Metadata = {
@@ -10,6 +11,18 @@ export const metadata: Metadata = {
 export default function BrandsPage() {
   return (
     <div className="content-container py-12 small:py-16">
+      <div className="mb-10">
+        <ImageBanner
+          image="/images/brand/editorial-equipment.webp"
+          imageAlt="Genuine pool equipment from the brands the Gulf trusts"
+          eyebrow="Authentic & supported"
+          headline="The brands the Gulf's pools are built on"
+          text="Hayward, Pentair, AstralPool, Zodiac, Speck and more — genuine, warrantied and delivered free over AED 500."
+          cta={{ label: "Browse the store", href: "/store" }}
+          variant="category"
+          align="left"
+        />
+      </div>
       <p className="text-aquora-accent text-xs font-semibold uppercase tracking-widest mb-2">The brands we carry</p>
       <h1 className="font-heading text-[32px] leading-tight text-aquora-ink mb-2">Shop by brand</h1>
       <p className="text-aquora-muted mb-10 max-w-2xl">

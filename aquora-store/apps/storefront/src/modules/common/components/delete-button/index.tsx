@@ -13,28 +13,37 @@ const DeleteButton = ({
   className?: string
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
+    setError(null)
     await deleteLineItem(id).catch((_err) => {
       setIsDeleting(false)
+      setError("Couldn't remove this — please try again.")
     })
   }
 
   return (
     <div
       className={clx(
-        "flex items-center justify-between text-small-regular",
+        "flex flex-col text-small-regular",
         className
       )}
     >
       <button
-        className="flex gap-x-1 text-aquora-muted hover:text-aquora-ink cursor-pointer"
+        className="flex gap-x-1 text-aquora-muted hover:text-aquora-ink cursor-pointer disabled:opacity-60"
         onClick={() => handleDelete(id)}
+        disabled={isDeleting}
       >
         {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}
         <span>{children}</span>
       </button>
+      {error && (
+        <span role="alert" className="mt-1 text-xs text-rose-600">
+          {error}
+        </span>
+      )}
     </div>
   )
 }

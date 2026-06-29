@@ -118,6 +118,9 @@ function ExpressInner({ cart }: { cart: HttpTypes.StoreCart }) {
   // the whole block hidden (and the "or pay with card" divider out) until onReady confirms.
   return (
     <div className={available ? "mb-2" : "hidden"}>
+      <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-aquora-muted">
+        Express checkout — pay in one tap
+      </p>
       <ExpressCheckoutElement
         onReady={({ availablePaymentMethods }) =>
           setAvailable(!!availablePaymentMethods)

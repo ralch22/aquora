@@ -9,7 +9,8 @@ const SignInPrompt = () => {
           Already have an account?
         </Heading>
         <Text className="txt-medium text-aquora-muted mt-2">
-          Sign in for a faster checkout and to track your orders.
+          Sign in for a faster checkout and to track your orders — or just
+          continue as a guest, no account needed.
         </Text>
       </div>
       <LocalizedClientLink

@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next"
 import { listBlogSlugs } from "./[countryCode]/(main)/blog/_lib/markdown"
+import { listGuides } from "@lib/aquora/guides"
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -31,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
   const staticPaths = [
     "", "store", "brands", "services", "about", "blog", "faq", "search", "contact",
+    "pool-care", "guides", "pool-dosing-calculator", "pool-problem-solver", "pool-sizing-guide",
     "legal/terms", "legal/privacy", "legal/returns", "legal/shipping", "legal/cookies",
   ]
   const entries: MetadataRoute.Sitemap = staticPaths.map((p) => ({
@@ -47,6 +49,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const slug of listBlogSlugs()) {
     entries.push({ url: `${BASE}/${CC}/blog/${slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.5 })
+  }
+  for (const g of listGuides()) {
+    entries.push({ url: `${BASE}/${CC}/guides/${g.slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.6 })
   }
   for (const handle of categories) {
     entries.push({ url: `${BASE}/${CC}/categories/${handle}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })

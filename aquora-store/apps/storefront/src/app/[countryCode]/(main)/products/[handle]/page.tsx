@@ -5,6 +5,14 @@ import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
 
+// Render dynamically (per request) rather than statically prerendering. The PDP now resolves its
+// pricing/related/FBT INLINE (no streamed <Suspense>) because deferred Suspense boundaries don't
+// flush React's `$RC` completion script in this deployment — a streamed Add-to-cart stays stuck on
+// its disabled fallback. Inline resolution needs request context (cart/region cookies via
+// listProducts), so the page must be dynamic. Full SSR HTML is still emitted (SEO-safe) and the
+// Cloudflare layer caches it. Mirrors the categories route, which is already force-dynamic.
+export const dynamic = "force-dynamic"
+
 type Props = {
   params: Promise<{ countryCode: string; handle: string }>
   searchParams: Promise<{ v_id?: string }>
@@ -117,11 +125,15 @@ export default async function ProductPage(props: Props) {
     queryParams: { handle: params.handle },
   }).then(({ response }) => response.products[0])
 
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
-
+  // Guard BEFORE computing images — getImagesForVariant() dereferences the product, so calling it
+  // on an undefined product throws "Cannot read properties of undefined (reading 'images')" and
+  // crashes the whole PDP into the error boundary instead of a clean 404. (Latent bug surfaced
+  // once the PDP became force-dynamic and renders per request.)
   if (!pricedProduct) {
     notFound()
   }
+
+  const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
   return (
     <ProductTemplate

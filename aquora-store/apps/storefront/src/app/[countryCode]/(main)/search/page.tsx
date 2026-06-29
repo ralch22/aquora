@@ -1,6 +1,8 @@
 import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getProductVideo } from "@lib/aquora/videos"
+import SearchTracker from "@modules/analytics/search-tracker"
+import ImageBanner from "@modules/common/components/image-banner"
 
 export const metadata: Metadata = {
   title: "Search — Aquora",
@@ -192,6 +194,19 @@ export default async function SearchPage(props: {
 
   return (
     <div className="content-container py-12 small:py-16">
+      {state.q ? <SearchTracker query={state.q} /> : null}
+      <div className="mb-8">
+        <ImageBanner
+          image="/images/brand/editorial-delivery.webp"
+          imageAlt="Free pool equipment delivery across the UAE"
+          eyebrow="Across the UAE"
+          headline="Free delivery over AED 500"
+          text="Can't find it? Ask Aqua, our AI advisor, bottom-right."
+          cta={{ label: "Pool Care tools", href: "/pool-care" }}
+          variant="strip"
+          align="left"
+        />
+      </div>
       <p className="text-aquora-accent text-xs font-semibold uppercase tracking-widest mb-2">
         {isBrowse ? "Browse" : "Catalogue search"}
       </p>

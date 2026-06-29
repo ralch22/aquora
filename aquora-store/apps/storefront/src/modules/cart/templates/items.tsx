@@ -11,10 +11,13 @@ type ItemsTemplateProps = {
 
 const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
   const items = cart?.items
+  const count = items?.reduce((a, i) => a + i.quantity, 0) ?? 0
   return (
     <div>
       <div className="pb-3 flex items-center">
-        <Heading className="text-[2rem] leading-[2.75rem]">Cart</Heading>
+        <Heading className="font-heading text-lg font-semibold text-aquora-ink">
+          {count} {count === 1 ? "item" : "items"} in your cart
+        </Heading>
       </div>
       <Table>
         <Table.Header className="border-t-0">

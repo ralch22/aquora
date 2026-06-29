@@ -2,6 +2,7 @@ import { Metadata } from "next"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { brand, contact } from "@lib/aquora/brand"
+import ImageBanner from "@modules/common/components/image-banner"
 import PageHeader from "../blog/_lib/page-header"
 import { readContentMarkdown } from "../blog/_lib/markdown"
 import { marked } from "marked"
@@ -71,6 +72,19 @@ export default async function ServicesPage() {
       />
 
       <section className="content-container py-16 small:py-24">
+        <div className="mb-14">
+          <ImageBanner
+            image="/images/brand/editorial-equipment.webp"
+            imageAlt="Aquora engineers specifying pool and water-feature equipment"
+            eyebrow="Design · supply · install"
+            headline="From first calculation to commissioning"
+            text="One engineering-led team for the full lifecycle of your pool, spa, pond or fountain — sized correctly, installed properly, supported long after."
+            cta={{ label: "Request a consultation", href: "/contact" }}
+            secondaryCta={{ label: "Browse equipment", href: "/store" }}
+            variant="category"
+            align="left"
+          />
+        </div>
         <article
           className="prose prose-headings:font-heading prose-headings:tracking-tight prose-lg max-w-none prose-a:text-aquora-primary"
           dangerouslySetInnerHTML={{ __html: html }}

@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ImageBanner from "@modules/common/components/image-banner"
 import PageHeader from "./_lib/page-header"
 import { readContentMarkdown, extractTitle, extractExcerpt, listBlogSlugs } from "./_lib/markdown"
 
@@ -66,6 +67,18 @@ export default function BlogIndexPage() {
       />
 
       <section className="content-container py-16 small:py-24">
+        <div className="mb-12">
+          <ImageBanner
+            image="/images/brand/editorial-support.webp"
+            imageAlt="Free pool care tools and expert help from Aquora"
+            eyebrow="Prefer the quick route?"
+            headline="Tools that do the thinking"
+            text="Skip the reading — our free dosing calculator, problem solver and AI advisor get you the answer in minutes."
+            cta={{ label: "Open Pool Care", href: "/pool-care" }}
+            variant="strip"
+            align="left"
+          />
+        </div>
         <div className="grid grid-cols-1 gap-8 small:grid-cols-2">
           {articles.map((article) => (
             <LocalizedClientLink

@@ -2,6 +2,7 @@ import { listCartShippingMethods } from "@lib/data/fulfillment"
 import { listCartPaymentMethods } from "@lib/data/payment"
 import { HttpTypes } from "@medusajs/types"
 import Addresses from "@modules/checkout/components/addresses"
+import CheckoutSteps from "@modules/checkout/components/checkout-steps"
 import Payment from "@modules/checkout/components/payment"
 import Review from "@modules/checkout/components/review"
 import Shipping from "@modules/checkout/components/shipping"
@@ -36,6 +37,7 @@ export default async function CheckoutForm({
   return (
     <div className="grid w-full grid-cols-1 gap-y-6">
       <BeginCheckoutTracker value={(cart as any).total} items={items} />
+      <CheckoutSteps />
       <SectionShell>
         <Addresses cart={cart} customer={customer} />
       </SectionShell>

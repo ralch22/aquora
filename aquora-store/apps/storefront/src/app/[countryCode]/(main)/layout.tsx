@@ -5,6 +5,7 @@ import { retrieveCustomer } from "@lib/data/customer"
 import { getBaseURL } from "@lib/util/env"
 import { StoreCartShippingOption } from "@medusajs/types"
 import AiAssistant from "@modules/layout/components/ai-assistant"
+import CompareBar from "@modules/layout/components/compare-bar"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
 import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
 }
 
 export default async function PageLayout(props: { children: React.ReactNode }) {
-  const customer = await retrieveCustomer()
-  const cart = await retrieveCart()
+  // Parallel — cart doesn't depend on customer; saves a round-trip on every page's TTFB.
+  const [customer, cart] = await Promise.all([retrieveCustomer(), retrieveCart()])
   let shippingOptions: StoreCartShippingOption[] = []
 
   if (cart) {
@@ -43,7 +44,16 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
       )}
       {props.children}
       <Footer />
-      <AiAssistant />
+      <AiAssistant
+        cartItems={
+          cart?.items?.map((i: any) => ({
+            title: i.product_title || i.title,
+            variant_id: i.variant_id,
+            handle: i.product?.handle,
+          })) || []
+        }
+      />
+      <CompareBar />
       <Toaster />
       <CookieConsent />
     </>

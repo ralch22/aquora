@@ -28,10 +28,13 @@ export default async function OrderCompletedTemplate({
     price: i.unit_price,
     quantity: i.quantity,
   }))
+  const handles = (order.items || [])
+    .map((i: any) => i.product_handle || i.product?.handle)
+    .filter(Boolean)
 
   return (
     <div className="py-12 min-h-[calc(100vh-64px)]">
-      <PurchaseTracker id={order.id} value={(order as any).total} items={items} />
+      <PurchaseTracker id={order.id} value={Number((order as any).total ?? 0)} items={items} handles={handles} />
       <div className="content-container flex w-full max-w-4xl flex-col gap-y-8">
         {isOnboarding && <OnboardingCta orderId={order.id} />}
 

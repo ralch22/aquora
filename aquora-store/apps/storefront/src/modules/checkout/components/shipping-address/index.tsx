@@ -2,7 +2,21 @@ import { HttpTypes } from "@medusajs/types"
 import { Container } from "@modules/common/components/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
+import NativeSelect from "@modules/common/components/native-select"
 import { mapKeys } from "lodash"
+
+// The seven UAE emirates — used as the "State / Province" selector when the
+// destination is the UAE (free-text province + a required postal code the UAE
+// doesn't use are a known checkout-abandonment driver).
+const UAE_EMIRATES = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+]
 import React, { useEffect, useMemo, useState } from "react"
 import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
@@ -25,11 +39,26 @@ const ShippingAddress = ({
     "shipping_address.company": cart?.shipping_address?.company || "",
     "shipping_address.postal_code": cart?.shipping_address?.postal_code || "",
     "shipping_address.city": cart?.shipping_address?.city || "",
-    "shipping_address.country_code": cart?.shipping_address?.country_code || "",
+    // UAE-first store: default the country to AE when the region supports it and
+    // nothing is saved yet, so the buyer skips a field and the emirate selector shows.
+    "shipping_address.country_code":
+      cart?.shipping_address?.country_code ||
+      (cart?.region?.countries?.some((c) => c.iso_2 === "ae") ? "ae" : ""),
     "shipping_address.province": cart?.shipping_address?.province || "",
     "shipping_address.phone": cart?.shipping_address?.phone || "",
     email: cart?.email || "",
   })
+
+  // Friendly inline email validation (the most error-prone field). Native `required` still
+  // gates submit; this just surfaces a clear message on blur instead of a browser tooltip.
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const validateEmail = (value: string) => {
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError("Enter a valid email address (e.g. name@example.com).")
+    } else {
+      setEmailError(null)
+    }
+  }
 
   const countriesInRegion = useMemo(
     () => cart?.region?.countries?.map((c) => c.iso_2),
@@ -149,12 +178,11 @@ const ShippingAddress = ({
           data-testid="shipping-company-input"
         />
         <Input
-          label="Postal code"
+          label="Postal code (optional)"
           name="shipping_address.postal_code"
           autoComplete="postal-code"
           value={formData["shipping_address.postal_code"]}
           onChange={handleChange}
-          required
           data-testid="shipping-postal-code-input"
         />
         <Input
@@ -175,14 +203,31 @@ const ShippingAddress = ({
           required
           data-testid="shipping-country-select"
         />
-        <Input
-          label="State / Province"
-          name="shipping_address.province"
-          autoComplete="address-level1"
-          value={formData["shipping_address.province"]}
-          onChange={handleChange}
-          data-testid="shipping-province-input"
-        />
+        {formData["shipping_address.country_code"] === "ae" ? (
+          <NativeSelect
+            name="shipping_address.province"
+            autoComplete="address-level1"
+            placeholder="Emirate"
+            value={formData["shipping_address.province"]}
+            onChange={handleChange}
+            data-testid="shipping-province-select"
+          >
+            {UAE_EMIRATES.map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
+          </NativeSelect>
+        ) : (
+          <Input
+            label="State / Province"
+            name="shipping_address.province"
+            autoComplete="address-level1"
+            value={formData["shipping_address.province"]}
+            onChange={handleChange}
+            data-testid="shipping-province-input"
+          />
+        )}
       </div>
       <div className="my-8">
         <Checkbox
@@ -201,7 +246,12 @@ const ShippingAddress = ({
           title="Enter a valid email address."
           autoComplete="email"
           value={formData.email}
-          onChange={handleChange}
+          onChange={(e) => {
+            handleChange(e)
+            if (emailError) validateEmail(e.target.value)
+          }}
+          onBlur={(e) => validateEmail(e.target.value)}
+          error={emailError ?? undefined}
           required
           data-testid="shipping-email-input"
         />

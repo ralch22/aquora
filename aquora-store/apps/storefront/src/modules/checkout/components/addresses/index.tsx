@@ -6,7 +6,6 @@ import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import Divider from "@modules/common/components/divider"
 import { Heading, Text } from "@modules/common/components/ui"
-import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useActionState } from "react"
 import BillingAddress from "../billing_address"
@@ -25,7 +24,12 @@ const Addresses = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "address"
+  // Open the address step whenever it's the active step OR no shipping address exists yet.
+  // Without the second clause, arriving at /checkout with no ?step= (e.g. from a "checkout"
+  // link that doesn't compute the step) leaves this step collapsed with no address to show —
+  // which renders a Spinner forever instead of the address form.
+  const isOpen =
+    searchParams.get("step") === "address" || !cart?.shipping_address
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
@@ -169,8 +173,21 @@ const Addresses = ({
                 </div>
               </div>
             ) : (
-              <div>
-                <Spinner />
+              <div className="flex flex-col items-start gap-3">
+                <Text className="txt-medium text-aquora-muted">
+                  We don&apos;t have a delivery address yet.
+                </Text>
+                <button
+                  type="button"
+                  onClick={handleEdit}
+                  className="inline-flex items-center gap-2 rounded-full border border-aquora-primary/30 bg-white px-5 py-2 text-sm font-semibold text-aquora-primary transition-colors hover:bg-aquora-primary/5"
+                  data-testid="add-shipping-address-button"
+                >
+                  Add shipping address
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" />
+                  </svg>
+                </button>
               </div>
             )}
           </div>

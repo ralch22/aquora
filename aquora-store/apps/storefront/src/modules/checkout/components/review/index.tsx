@@ -57,6 +57,16 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
               </Text>
             </div>
           </div>
+          {cart.email && (
+            <p className="mb-4 flex items-center gap-2 text-sm text-aquora-muted">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-aquora-primary" aria-hidden>
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3 7 9 6 9-6" />
+              </svg>
+              We&apos;ll email your order confirmation to{" "}
+              <span className="font-medium text-aquora-ink">{cart.email}</span>.
+            </p>
+          )}
           <PaymentButton cart={cart} data-testid="submit-order-button" />
         </>
       )}

@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-
+import Image from "next/image"
 import Register from "@modules/account/components/register"
 import Login from "@modules/account/components/login"
 
@@ -16,13 +15,17 @@ const TRUST = [
   "Expert design, installation & after-sales support",
 ]
 
-const LoginTemplate = () => {
-  const [currentView, setCurrentView] = useState("sign-in")
+const LoginTemplate = ({ initialView = "sign-in" }: { initialView?: string }) => {
+  // View is URL-driven (?view=register) and server-rendered, so no client toggle state is
+  // needed — this works even if the subtree hasn't hydrated.
+  const currentView = initialView
 
   return (
     <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-[1.05fr_1fr]">
       {/* Brand panel */}
       <div className="relative hidden overflow-hidden bg-gradient-to-br from-aquora-secondary to-aquora-primary p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <Image src="/images/brand/hero-bg.webp" alt="" fill sizes="55vw" quality={70} className="absolute inset-0 object-cover" />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-aquora-secondary/95 via-aquora-secondary/90 to-aquora-primary/85" />
         <svg aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 text-white/[0.06]" preserveAspectRatio="none" viewBox="0 0 600 300" fill="none">
           <path d="M0 200 Q 150 150 300 200 T 600 200" stroke="currentColor" strokeWidth="1.5" />
           <path d="M0 240 Q 150 190 300 240 T 600 240" stroke="currentColor" strokeWidth="1.5" />
@@ -55,11 +58,7 @@ const LoginTemplate = () => {
       {/* Form */}
       <div className="flex items-center justify-center px-6 py-12 small:px-10">
         <div className="w-full max-w-sm">
-          {currentView === "sign-in" ? (
-            <Login setCurrentView={setCurrentView} />
-          ) : (
-            <Register setCurrentView={setCurrentView} />
-          )}
+          {currentView === "sign-in" ? <Login /> : <Register />}
         </div>
       </div>
     </div>

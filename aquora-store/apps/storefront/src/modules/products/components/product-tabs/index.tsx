@@ -3,6 +3,7 @@
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
 import Refresh from "@modules/common/icons/refresh"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 import Accordion from "./accordion"
 import { HttpTypes } from "@medusajs/types"
@@ -86,31 +87,38 @@ const ShippingInfoTab = () => {
         <div className="flex items-start gap-x-2">
           <FastDelivery />
           <div>
-            <span className="font-semibold">Fast delivery</span>
-            <p className="max-w-sm">
-              Your package will arrive in 3-5 business days at your pick up
-              location or in the comfort of your home.
+            <span className="font-semibold">UAE-wide delivery</span>
+            <p className="max-w-sm text-aquora-muted">
+              In-stock equipment is dispatched within 48 hours and delivered
+              across the UAE and wider GCC. Free delivery on orders over AED 500.
             </p>
           </div>
         </div>
         <div className="flex items-start gap-x-2">
           <Refresh />
           <div>
-            <span className="font-semibold">Simple exchanges</span>
-            <p className="max-w-sm">
-              Is the fit not quite right? No worries - we&apos;ll exchange your
-              product for a new one.
+            <span className="font-semibold">Genuine &amp; warrantied</span>
+            <p className="max-w-sm text-aquora-muted">
+              Every item is authentic, authorised stock with full manufacturer
+              warranty — backed by our local technical and after-sales team.
             </p>
           </div>
         </div>
         <div className="flex items-start gap-x-2">
           <Back />
           <div>
-            <span className="font-semibold">Easy returns</span>
-            <p className="max-w-sm">
-              Just return your product and we&apos;ll refund your money. No
-              questions asked – we&apos;ll do our best to make sure your return
-              is hassle-free.
+            <span className="font-semibold">Returns</span>
+            <p className="max-w-sm text-aquora-muted">
+              Unused items in their original packaging can be returned in line
+              with our{" "}
+              <LocalizedClientLink
+                href="/legal/returns"
+                className="font-medium text-aquora-primary hover:underline"
+              >
+                returns policy
+              </LocalizedClientLink>
+              . Questions before you buy? Our team can confirm fit and
+              compatibility first.
             </p>
           </div>
         </div>

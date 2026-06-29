@@ -10,12 +10,21 @@ export const metadata: Metadata = {
   description: "Your Aquora account — orders, addresses and a faster checkout.",
 }
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>
+}) {
   const customer = await retrieveCustomer().catch(() => null)
 
-  // Logged out → sign-in / register; logged in → account overview.
+  // Logged out → sign-in / register; logged in → account overview. The view is driven by the
+  // URL (?view=register) so the sign-in ↔ register switch works via navigation even if the
+  // client subtree hasn't hydrated.
   if (!customer) {
-    return <LoginTemplate />
+    const { view } = await searchParams
+    return (
+      <LoginTemplate initialView={view === "register" ? "register" : "sign-in"} />
+    )
   }
 
   const orders = (await listOrders().catch(() => null)) || null

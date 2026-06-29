@@ -2,7 +2,9 @@ import ItemsTemplate from "./items"
 import Summary from "./summary"
 import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
+import MobileCheckoutBar from "../components/mobile-checkout-bar"
 import Divider from "@modules/common/components/divider"
+import ImageBanner from "@modules/common/components/image-banner"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -13,8 +15,20 @@ const CartTemplate = ({
   customer: HttpTypes.StoreCustomer | null
 }) => {
   return (
-    <div className="py-12">
+    <div className="py-12 pb-28 small:pb-12">
       <div className="content-container" data-testid="cart-container">
+        <div className="mb-8">
+          <ImageBanner
+            image="/images/brand/editorial-delivery.webp"
+            imageAlt="Free, fast pool equipment delivery across the UAE"
+            eyebrow="You're in good hands"
+            headline="Free UAE delivery over AED 500"
+            text="Genuine equipment, secure checkout and expert after-sales support."
+            cta={{ label: "Keep shopping", href: "/store" }}
+            variant="strip"
+            align="left"
+          />
+        </div>
         {cart?.items?.length ? (
           <>
           <div className="mb-8 border-b border-black/[0.06] pb-6">
@@ -48,6 +62,7 @@ const CartTemplate = ({
               </div>
             </div>
           </div>
+          <MobileCheckoutBar cart={cart} />
           </>
         ) : (
           <div>

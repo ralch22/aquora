@@ -12,7 +12,7 @@ import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -23,9 +23,18 @@ type ItemProps = {
 const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Optimistic quantity: the <select> reflects the choice INSTANTLY instead of snapping
+  // back to the old value until the server round-trip + revalidation lands. Cleared once
+  // the reconciled item.quantity arrives, or reverted on error.
+  const [optimisticQty, setOptimisticQty] = useState<number | null>(null)
+
+  useEffect(() => {
+    setOptimisticQty(null)
+  }, [item.quantity])
 
   const changeQuantity = async (quantity: number) => {
     setError(null)
+    setOptimisticQty(quantity)
     setUpdating(true)
 
     await updateLineItem({
@@ -34,6 +43,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     })
       .catch((err) => {
         setError(err.message)
+        setOptimisticQty(null)
       })
       .finally(() => {
         setUpdating(false)
@@ -78,6 +88,34 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           {item.product_title}
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        {type === "full" &&
+          (() => {
+            // Honest, real-inventory stock signal per line (never fabricated).
+            const tracked = !!(v?.manage_inventory && !v?.allow_backorder)
+            const qty = v?.inventory_quantity ?? 0
+            const low = tracked && qty > 0 && qty <= 5
+            const stocked = tracked && qty > 0 && !low
+            const label = low
+              ? `Only ${qty} left`
+              : stocked
+              ? "In stock"
+              : "Available to order"
+            const tone = stocked
+              ? "text-emerald-700 bg-emerald-50"
+              : "text-aquora-accentdark bg-aquora-accent/10"
+            const dot = stocked ? "bg-emerald-500" : "bg-aquora-accent"
+            return (
+              <span
+                className={clx(
+                  "mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  tone
+                )}
+              >
+                <span className={clx("h-1.5 w-1.5 rounded-full", dot)} aria-hidden />
+                {label}
+              </span>
+            )
+          })()}
       </Table.Cell>
 
       {type === "full" && (
@@ -85,7 +123,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           <div className="flex gap-2 items-center w-28">
             <DeleteButton id={item.id} data-testid="product-delete-button" />
             <CartItemSelect
-              value={item.quantity}
+              value={optimisticQty ?? item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
               className="w-14 h-10 p-4"
               data-testid="product-select-button"

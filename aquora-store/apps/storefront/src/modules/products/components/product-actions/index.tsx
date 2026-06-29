@@ -2,6 +2,7 @@
 
 import { addToCart } from "@lib/data/cart"
 import { trackAddToCart, trackViewItem } from "@lib/analytics"
+import { trackRetailEvent, recordRecentlyViewed } from "@lib/aquora/retail-track"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -12,6 +13,8 @@ import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
+import { PaymentMethods } from "@modules/common/components/payment-trust"
+import { toast } from "@modules/common/components/toast"
 import { useRouter } from "next/navigation"
 
 type ProductActionsProps = {
@@ -127,6 +130,17 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
+  // True only when we hold real, counted stock — so the "ships within 48 hours" promise is
+  // honest. Backorder / non-inventory-tracked variants are purchasable but NOT a 48h promise.
+  const stockTracked = useMemo(
+    () =>
+      !!(
+        selectedVariant?.manage_inventory &&
+        (selectedVariant?.inventory_quantity || 0) > 0
+      ),
+    [selectedVariant]
+  )
+
   // GA4 view_item once per product view
   useEffect(() => {
     trackViewItem({
@@ -135,6 +149,9 @@ export default function ProductActions({
       price: (selectedVariant as any)?.calculated_price?.calculated_amount,
       category: (product as any).categories?.[0]?.name,
     })
+    // Google Retail personalization signals (Phase 2).
+    trackRetailEvent("detail-page-view", { productHandles: [product.handle] })
+    recordRecentlyViewed(product.handle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id])
 
@@ -161,6 +178,16 @@ export default function ProductActions({
       quantity,
       category: (product as any).categories?.[0]?.name,
     })
+    trackRetailEvent("add-to-cart", { productHandles: [product.handle] })
+
+    // Confirm the add: the toast works everywhere (the cart dropdown is desktop-only and hidden on
+    // mobile), and router.refresh() re-renders the server CartButton so the badge updates and the
+    // desktop dropdown auto-opens. Without this the most important micro-moment gave zero feedback.
+    toast.success(
+      "Added to cart",
+      quantity > 1 ? `${quantity} × ${product.title}` : product.title
+    )
+    router.refresh()
 
     setIsAdding(false)
   }
@@ -231,7 +258,7 @@ export default function ProductActions({
             !isValidVariant
           }
           variant="primary"
-          className="w-full h-10"
+          className="w-full h-12 text-base font-semibold"
           isLoading={isAdding}
           data-testid="add-product-button"
         >
@@ -244,18 +271,34 @@ export default function ProductActions({
 
         {selectedVariant && inStock && (
           <ul className="mt-4 flex flex-col gap-2 text-xs text-aquora-muted">
-            <li className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
-              In stock — ships within 48 hours across the UAE
-            </li>
+            {stockTracked ? (
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />
+                In stock — ships within 48 hours across the UAE
+              </li>
+            ) : (
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aquora-accent" aria-hidden />
+                Available to order — we&apos;ll confirm your dispatch date
+              </li>
+            )}
             <li className="flex items-center gap-2">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="shrink-0 text-aquora-primary" aria-hidden>
                 <path d="M8 1.5 3 3.5v4c0 3 2.2 5.2 5 6.5 2.8-1.3 5-3.5 5-6.5v-4L8 1.5Z" strokeLinejoin="round" />
               </svg>
               Genuine product · manufacturer warranty · easy returns
             </li>
+            <li className="flex items-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-aquora-primary" aria-hidden>
+                <rect x="4" y="10" width="16" height="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+              Secure, encrypted checkout
+            </li>
           </ul>
         )}
+
+        {selectedVariant && inStock && <PaymentMethods className="mt-3" />}
 
         <MobileActions
           product={product}

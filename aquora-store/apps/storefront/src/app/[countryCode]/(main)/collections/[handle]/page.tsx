@@ -21,6 +21,12 @@ type Props = {
 
 export const PRODUCT_LIMIT = 12
 
+// Dynamic render: the product grid is now resolved INLINE (deferred <Suspense> never flushes
+// React's `$RC` in this deployment, leaving grids stuck behind skeletons). Inline grids read
+// request context (cookies via listProducts), so the route renders per request. SSR HTML is
+// still emitted (SEO-safe) and the Cloudflare layer caches it.
+export const dynamic = "force-dynamic"
+
 export async function generateStaticParams() {
   const { collections } = await listCollections({
     fields: "*products",

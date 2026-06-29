@@ -1,12 +1,13 @@
-import { Suspense } from "react"
-
+import Image from "next/image"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import { categories } from "@lib/aquora/categories"
+import { categoryImage } from "@lib/aquora/category-images"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import WishlistNav from "@modules/layout/components/wishlist-nav"
 import SideMenu from "@modules/layout/components/side-menu"
 import SearchBox from "@modules/layout/components/search-box"
 
@@ -79,17 +80,26 @@ export default async function Nav() {
                         Shop by category
                       </p>
                       <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                        {categories.map((cat) => (
-                          <li key={cat.handle}>
-                            <LocalizedClientLink
-                              href={`/categories/${cat.handle}`}
-                              className="group/cat flex items-center gap-x-2.5 rounded-xl px-2.5 py-2 text-sm text-aquora-ink/80 transition-colors duration-150 hover:bg-aquora-surface hover:text-aquora-primary"
-                            >
-                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-aquora-muted/40 transition-colors group-hover/cat:bg-aquora-accent" />
-                              {cat.name}
-                            </LocalizedClientLink>
-                          </li>
-                        ))}
+                        {categories.map((cat) => {
+                          const img = categoryImage(cat.handle)
+                          return (
+                            <li key={cat.handle}>
+                              <LocalizedClientLink
+                                href={`/categories/${cat.handle}`}
+                                className="group/cat flex items-center gap-x-2.5 rounded-xl px-2 py-1.5 text-sm text-aquora-ink/80 transition-colors duration-150 hover:bg-aquora-surface hover:text-aquora-primary"
+                              >
+                                <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-black/[0.05] bg-gradient-to-b from-white to-aquora-surface">
+                                  {img ? (
+                                    <Image src={img} alt="" width={36} height={36} quality={45} className="h-full w-full object-contain p-1" />
+                                  ) : (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-aquora-muted/40" />
+                                  )}
+                                </span>
+                                <span className="leading-tight">{cat.name}</span>
+                              </LocalizedClientLink>
+                            </li>
+                          )
+                        })}
                       </ul>
                       <LocalizedClientLink href="/store" className="mt-3 inline-flex items-center gap-1.5 px-2.5 text-sm font-semibold text-aquora-primary transition-colors hover:text-aquora-secondary">
                         View all products
@@ -128,6 +138,12 @@ export default async function Nav() {
                 className="font-medium text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150"
               >
                 Services
+              </LocalizedClientLink>
+              <LocalizedClientLink
+                href="/pool-care"
+                className="font-medium text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150"
+              >
+                Pool Care
               </LocalizedClientLink>
               <LocalizedClientLink
                 href="/about"
@@ -173,19 +189,13 @@ export default async function Nav() {
                 Account
               </LocalizedClientLink>
             </div>
-            <Suspense
-              fallback={
-                <LocalizedClientLink
-                  className="text-aquora-ink/80 hover:text-aquora-primary transition-colors duration-150 flex gap-2"
-                  href="/cart"
-                  data-testid="nav-cart-link"
-                >
-                  Cart (0)
-                </LocalizedClientLink>
-              }
-            >
-              <CartButton />
-            </Suspense>
+            <WishlistNav />
+            {/* Inline, not a streamed <Suspense> — deferred Suspense boundaries never flush
+                React's `$RC` in this deployment, which would leave the cart stuck on a
+                non-interactive "Cart (0)" fallback (wrong count, dead hover dropdown). The (main)
+                layout already reads the cart cookie, so inline CartButton adds no new dynamic
+                constraint and resolves before the shell flush, so it paints AND hydrates. */}
+            <CartButton />
           </div>
         </nav>
       </header>

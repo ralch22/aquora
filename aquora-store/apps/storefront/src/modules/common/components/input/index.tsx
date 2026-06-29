@@ -11,12 +11,14 @@ type InputProps = Omit<
   label: string
   errors?: Record<string, unknown>
   touched?: Record<string, unknown>
+  /** Inline validation message — when set, the field shows a rose border + message below. */
+  error?: string
   name: string
   topLabel?: string
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ type, name, label, touched: _touched, required, topLabel, ...props }, ref) => {
+  ({ type, name, label, touched: _touched, errors: _errors, error, required, topLabel, style, ...props }, ref) => {
     const inputRef = React.useRef<HTMLInputElement>(null)
     const [showPassword, setShowPassword] = useState(false)
     const [inputType, setInputType] = useState(type)
@@ -45,7 +47,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={name}
             placeholder=" "
             required={required}
-            className="pt-4 pb-1 block w-full h-12 px-4 mt-0 bg-white border border-black/[0.08] rounded-xl appearance-none text-aquora-ink transition-colors focus:outline-none focus:ring-2 focus:ring-aquora-primary/20 focus:border-aquora-primary hover:border-black/15"
+            aria-invalid={error ? true : undefined}
+            // Inline border on error guarantees the rose highlight regardless of class cascade.
+            style={error ? { ...(style || {}), borderColor: "#fb7185" } : style}
+            className={`pt-4 pb-1 block w-full h-12 px-4 mt-0 bg-white border rounded-xl appearance-none text-aquora-ink transition-colors focus:outline-none focus:ring-2 ${
+              error
+                ? "focus:ring-rose-200"
+                : "border-black/[0.08] focus:ring-aquora-primary/20 focus:border-aquora-primary hover:border-black/15"
+            }`}
             {...props}
             ref={inputRef}
           />
@@ -68,6 +77,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             </button>
           )}
         </div>
+        {error && (
+          <p className="mt-1.5 text-xs text-rose-600" role="alert">
+            {error}
+          </p>
+        )}
       </div>
     )
   }
