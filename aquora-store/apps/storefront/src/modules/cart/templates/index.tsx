@@ -5,6 +5,7 @@ import SignInPrompt from "../components/sign-in-prompt"
 import MobileCheckoutBar from "../components/mobile-checkout-bar"
 import Divider from "@modules/common/components/divider"
 import ImageBanner from "@modules/common/components/image-banner"
+import RecommendedRail from "@modules/home/components/recommended-rail"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -14,6 +15,14 @@ const CartTemplate = ({
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) => {
+  // Anchor the cross-sell on the most expensive cart line so /store/recommend
+  // returns complementary "you may also need" items for the headline purchase.
+  const contextHandle = cart?.items?.length
+    ? [...cart.items]
+        .sort((a, b) => (b.unit_price ?? 0) - (a.unit_price ?? 0))[0]
+        ?.product_handle ?? undefined
+    : undefined
+
   return (
     <div className="py-12 pb-28 small:pb-12">
       <div className="content-container" data-testid="cart-container">
@@ -70,6 +79,16 @@ const CartTemplate = ({
           </div>
         )}
       </div>
+      {/* Cart cross-sell — highest-intent moment. Anchored on the priciest line so
+          /store/recommend returns complementary "you may also need" items. Renders inline
+          (no streamed Suspense) and self-hides when fewer than 3 recs come back. */}
+      {cart?.items?.length ? (
+        <RecommendedRail
+          eyebrow="You may also need"
+          title="Complete your setup"
+          handle={contextHandle}
+        />
+      ) : null}
     </div>
   )
 }
