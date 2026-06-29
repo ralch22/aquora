@@ -7,7 +7,9 @@ import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import Divider from "@modules/common/components/divider"
-import OptionSelect from "@modules/products/components/product-actions/option-select"
+import OptionSelect, {
+  type OptionValueHint,
+} from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -141,6 +143,93 @@ export default function ProductActions({
     [selectedVariant]
   )
 
+  // Per-option, per-value hints derived ONLY from real variant data, passed into
+  // OptionSelect so a shopper sees out-of-stock / higher-price signals before they
+  // reach the Add-to-cart button. No fabricated stock or scarcity: a value is only
+  // disabled when every variant carrying it is genuinely out of stock, and a price
+  // delta is only shown when variants legitimately differ in price.
+  const optionValueHints = useMemo(() => {
+    const variants = product.variants ?? []
+    // Hints only make sense across multiple variants; single-variant catalogue
+    // (the common case) renders no option selectors at all.
+    if (variants.length <= 1) {
+      return {} as Record<string, Record<string, OptionValueHint>>
+    }
+
+    const amountOf = (v: HttpTypes.StoreProductVariant) =>
+      (v as any).calculated_price?.calculated_amount as number | undefined
+
+    const allAmounts = variants
+      .map(amountOf)
+      .filter((n): n is number => typeof n === "number")
+    const baseAmount = allAmounts.length ? Math.min(...allAmounts) : undefined
+
+    // Mirrors the inStock logic below: a variant is out of stock only when its
+    // inventory is tracked, depleted, and backorders are not allowed.
+    const isOutOfStock = (v: HttpTypes.StoreProductVariant) =>
+      !!v.manage_inventory &&
+      (v.inventory_quantity || 0) <= 0 &&
+      !v.allow_backorder
+
+    const hints: Record<string, Record<string, OptionValueHint>> = {}
+
+    for (const option of product.options ?? []) {
+      const valueMap: Record<string, OptionValueHint> = {}
+
+      for (const optionValue of option.values ?? []) {
+        const value = optionValue.value
+        const matching = variants.filter(
+          (v) => optionsAsKeymap(v.options)?.[option.id] === value
+        )
+        if (!matching.length) {
+          continue
+        }
+
+        const hint: OptionValueHint = {}
+
+        // Disable only when EVERY matching variant is genuinely out of stock.
+        if (matching.every(isOutOfStock)) {
+          hint.disabled = true
+        }
+
+        // Honest "+AED" delta: cheapest variant with this value vs the product's
+        // cheapest variant. Only surfaced when it's a real positive difference.
+        if (baseAmount !== undefined) {
+          const matchAmounts = matching
+            .map(amountOf)
+            .filter((n): n is number => typeof n === "number")
+          if (matchAmounts.length) {
+            const delta = Math.min(...matchAmounts) - baseAmount
+            if (delta > 0) {
+              hint.priceDelta = delta
+            }
+          }
+        }
+
+        if (hint.disabled || hint.priceDelta !== undefined) {
+          valueMap[value] = hint
+        }
+      }
+
+      if (Object.keys(valueMap).length) {
+        hints[option.id] = valueMap
+      }
+    }
+
+    return hints
+  }, [product.variants, product.options])
+
+  // Currency for the price-delta hints, taken from real variant pricing.
+  const hintCurrencyCode = useMemo(
+    () =>
+      (
+        product.variants?.find(
+          (v) => (v as any).calculated_price?.currency_code
+        ) as any
+      )?.calculated_price?.currency_code as string | undefined,
+    [product.variants]
+  )
+
   // GA4 view_item once per product view
   useEffect(() => {
     trackViewItem({
@@ -206,6 +295,8 @@ export default function ProductActions({
                       current={options[option.id]}
                       updateOption={setOptionValue}
                       title={option.title ?? ""}
+                      valueHints={optionValueHints[option.id]}
+                      currencyCode={hintCurrencyCode}
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
                     />
