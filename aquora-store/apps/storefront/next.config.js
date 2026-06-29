@@ -26,6 +26,10 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    // Prefer modern formats (AVIF, then WebP) for better LCP / Core Web Vitals
+    // when image optimization is active. remotePatterns below already allow
+    // storage.googleapis.com (where product/brand imagery is served from).
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "http",
