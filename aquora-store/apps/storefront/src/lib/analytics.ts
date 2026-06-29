@@ -91,3 +91,48 @@ export function trackExperimentImpression(experimentId: string, variantId: strin
     { [`experiment_${experimentId}`]: variantId },
   ] as unknown as Record<string, unknown>)
 }
+
+// Stamp each item with its list context (GA4 recommends item_list_name/id on the items too,
+// not just the event) plus its position in the list.
+const toListItem = (i: Item, idx: number, listName: string, listId?: string) => ({
+  ...toItem(i),
+  index: idx,
+  item_list_name: listName,
+  ...(listId ? { item_list_id: listId } : {}),
+})
+
+// Impression of a product grid/rail. Fires once when the list enters the viewport.
+export function trackViewItemList(p: { listName: string; listId?: string; items: Item[] }) {
+  if (!p.items.length) return
+  emit("view_item_list", {
+    item_list_name: p.listName,
+    ...(p.listId ? { item_list_id: p.listId } : {}),
+    items: p.items.map((it, idx) => toListItem(it, idx, p.listName, p.listId)),
+  })
+}
+
+// Click-through from a list into a PDP, carrying the originating list name.
+export function trackSelectItem(p: { listName: string; listId?: string; item: Item; index?: number }) {
+  emit("select_item", {
+    item_list_name: p.listName,
+    ...(p.listId ? { item_list_id: p.listId } : {}),
+    items: [toListItem(p.item, p.index ?? 0, p.listName, p.listId)],
+  })
+}
+
+export function trackSearch(searchTerm: string) {
+  if (!searchTerm) return
+  emit("search", undefined, { search_term: searchTerm })
+}
+
+export function trackViewCart(p: { value?: number; items?: Item[] }) {
+  emit("view_cart", { currency: "AED", value: Number(p.value ?? 0), items: (p.items || []).map(toItem) })
+}
+
+export function trackRemoveFromCart(i: Item) {
+  emit("remove_from_cart", {
+    currency: "AED",
+    value: Number(i.price ?? 0) * Number(i.quantity ?? 1),
+    items: [toItem({ ...i, quantity: i.quantity ?? 1 })],
+  })
+}

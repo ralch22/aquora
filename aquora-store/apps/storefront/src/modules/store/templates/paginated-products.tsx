@@ -3,6 +3,8 @@ import { getRegion } from "@lib/data/regions"
 import { getReviewAggregates } from "@lib/data/reviews"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductPreview from "@modules/products/components/product-preview"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { toListItems } from "@lib/aquora/list-items"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -110,22 +112,31 @@ export default async function PaginatedProducts({
   // One batched request for real review ratings across the whole grid (no per-card N+1).
   const ratings = await getReviewAggregates(products.map((p) => p.id))
 
+  // GA4 list context: category > collection > generic store grid.
+  const listName = categoryId
+    ? `category:${categoryId}`
+    : collectionId
+    ? `collection:${collectionId}`
+    : "store"
+
   return (
     <>
-      <ul
-        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
-        data-testid="products-list"
-      >
-        {products.flatMap((p, i) => {
-          const card = (
-            <li key={p.id}>
-              <ProductPreview product={p} region={region} rating={ratings[p.id]} />
-            </li>
-          )
-          // Inject the promo tile once, after the 4th product on the first page.
-          return page === 1 && i === 4 ? [<GridPromoTile key="grid-promo" />, card] : [card]
-        })}
-      </ul>
+      <ProductListTracker listName={listName} items={toListItems(products)}>
+        <ul
+          className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+          data-testid="products-list"
+        >
+          {products.flatMap((p, i) => {
+            const card = (
+              <li key={p.id}>
+                <ProductPreview product={p} region={region} rating={ratings[p.id]} />
+              </li>
+            )
+            // Inject the promo tile once, after the 4th product on the first page.
+            return page === 1 && i === 4 ? [<GridPromoTile key="grid-promo" />, card] : [card]
+          })}
+        </ul>
+      </ProductListTracker>
       {totalPages > 1 && (
         <Pagination
           data-testid="product-pagination"
