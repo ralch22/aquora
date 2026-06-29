@@ -60,6 +60,57 @@ const ShippingAddress = ({
     }
   }
 
+  // Per-field required validation, mirroring the email pattern: validate on blur, then
+  // re-validate on change only once a field has errored. Native `required` stays the hard
+  // submit gate; these inline messages are additive (rose border + message via the Input/select).
+  const REQUIRED_FIELDS = new Set([
+    "shipping_address.first_name",
+    "shipping_address.last_name",
+    "shipping_address.address_1",
+    "shipping_address.city",
+    "shipping_address.country_code",
+    "shipping_address.province",
+  ])
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const requiredMessage = (name: string): string => {
+    switch (name) {
+      case "shipping_address.first_name":
+        return "First name is required."
+      case "shipping_address.last_name":
+        return "Last name is required."
+      case "shipping_address.address_1":
+        return "Address is required."
+      case "shipping_address.city":
+        return "City is required."
+      case "shipping_address.country_code":
+        return "Country is required."
+      case "shipping_address.province":
+        return formData["shipping_address.country_code"] === "ae"
+          ? "Emirate is required."
+          : "State / Province is required."
+      default:
+        return "This field is required."
+    }
+  }
+  const validateRequired = (name: string, value: string) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev }
+      if (!value || !value.trim()) {
+        next[name] = requiredMessage(name)
+      } else {
+        delete next[name]
+      }
+      return next
+    })
+  }
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    if (REQUIRED_FIELDS.has(e.target.name)) {
+      validateRequired(e.target.name, e.target.value)
+    }
+  }
+
   const countriesInRegion = useMemo(
     () => cart?.region?.countries?.map((c) => c.iso_2),
     [cart?.region]
@@ -121,6 +172,10 @@ const ShippingAddress = ({
       ...formData,
       [e.target.name]: e.target.value,
     })
+    // Re-validate a required field on change only after it has first errored.
+    if (REQUIRED_FIELDS.has(e.target.name) && fieldErrors[e.target.name]) {
+      validateRequired(e.target.name, e.target.value)
+    }
   }
 
   return (
@@ -148,6 +203,8 @@ const ShippingAddress = ({
           autoComplete="given-name"
           value={formData["shipping_address.first_name"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["shipping_address.first_name"]}
           required
           data-testid="shipping-first-name-input"
         />
@@ -157,6 +214,8 @@ const ShippingAddress = ({
           autoComplete="family-name"
           value={formData["shipping_address.last_name"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["shipping_address.last_name"]}
           required
           data-testid="shipping-last-name-input"
         />
@@ -166,6 +225,8 @@ const ShippingAddress = ({
           autoComplete="address-line1"
           value={formData["shipping_address.address_1"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["shipping_address.address_1"]}
           required
           data-testid="shipping-address-input"
         />
@@ -191,6 +252,8 @@ const ShippingAddress = ({
           autoComplete="address-level2"
           value={formData["shipping_address.city"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["shipping_address.city"]}
           required
           data-testid="shipping-city-input"
         />
@@ -200,6 +263,8 @@ const ShippingAddress = ({
           region={cart?.region}
           value={formData["shipping_address.country_code"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["shipping_address.country_code"]}
           required
           data-testid="shipping-country-select"
         />
@@ -210,6 +275,8 @@ const ShippingAddress = ({
             placeholder="Emirate"
             value={formData["shipping_address.province"]}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={fieldErrors["shipping_address.province"]}
             data-testid="shipping-province-select"
           >
             {UAE_EMIRATES.map((e) => (
@@ -225,6 +292,8 @@ const ShippingAddress = ({
             autoComplete="address-level1"
             value={formData["shipping_address.province"]}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={fieldErrors["shipping_address.province"]}
             data-testid="shipping-province-input"
           />
         )}

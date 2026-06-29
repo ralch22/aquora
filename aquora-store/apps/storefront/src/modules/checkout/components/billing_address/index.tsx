@@ -16,6 +16,52 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     "billing_address.phone": cart?.billing_address?.phone || "",
   })
 
+  // Per-field required validation, mirroring the shipping form: validate on blur, then
+  // re-validate on change only once a field has errored. Native `required` stays the hard
+  // submit gate; these inline messages are additive (rose border + message via the Input/select).
+  const REQUIRED_FIELDS = new Set([
+    "billing_address.first_name",
+    "billing_address.last_name",
+    "billing_address.address_1",
+    "billing_address.postal_code",
+    "billing_address.country_code",
+  ])
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const requiredMessage = (name: string): string => {
+    switch (name) {
+      case "billing_address.first_name":
+        return "First name is required."
+      case "billing_address.last_name":
+        return "Last name is required."
+      case "billing_address.address_1":
+        return "Address is required."
+      case "billing_address.postal_code":
+        return "Postal code is required."
+      case "billing_address.country_code":
+        return "Country is required."
+      default:
+        return "This field is required."
+    }
+  }
+  const validateRequired = (name: string, value: string) => {
+    setFieldErrors((prev) => {
+      const next = { ...prev }
+      if (!value || !value.trim()) {
+        next[name] = requiredMessage(name)
+      } else {
+        delete next[name]
+      }
+      return next
+    })
+  }
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    if (REQUIRED_FIELDS.has(e.target.name)) {
+      validateRequired(e.target.name, e.target.value)
+    }
+  }
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLInputElement | HTMLSelectElement
@@ -25,6 +71,10 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
       ...formData,
       [e.target.name]: e.target.value,
     })
+    // Re-validate a required field on change only after it has first errored.
+    if (REQUIRED_FIELDS.has(e.target.name) && fieldErrors[e.target.name]) {
+      validateRequired(e.target.name, e.target.value)
+    }
   }
 
   return (
@@ -36,6 +86,8 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           autoComplete="given-name"
           value={formData["billing_address.first_name"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["billing_address.first_name"]}
           required
           data-testid="billing-first-name-input"
         />
@@ -45,6 +97,8 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           autoComplete="family-name"
           value={formData["billing_address.last_name"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["billing_address.last_name"]}
           required
           data-testid="billing-last-name-input"
         />
@@ -54,6 +108,8 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           autoComplete="address-line1"
           value={formData["billing_address.address_1"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["billing_address.address_1"]}
           required
           data-testid="billing-address-input"
         />
@@ -71,6 +127,8 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           autoComplete="postal-code"
           value={formData["billing_address.postal_code"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["billing_address.postal_code"]}
           required
           data-testid="billing-postal-input"
         />
@@ -87,6 +145,8 @@ const BillingAddress = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           region={cart?.region}
           value={formData["billing_address.country_code"]}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldErrors["billing_address.country_code"]}
           required
           data-testid="billing-country-select"
         />

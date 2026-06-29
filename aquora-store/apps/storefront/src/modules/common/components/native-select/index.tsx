@@ -13,11 +13,13 @@ export type NativeSelectProps = {
   placeholder?: string
   errors?: Record<string, unknown>
   touched?: Record<string, unknown>
+  /** Inline validation message — when set, the select shows a rose border + message below. */
+  error?: string
 } & SelectHTMLAttributes<HTMLSelectElement>
 
 const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
   (
-    { placeholder = "Select...", defaultValue, className, children, ...props },
+    { placeholder = "Select...", defaultValue, className, children, error, ...props },
     ref
   ) => {
     const innerRef = useRef<HTMLSelectElement>(null)
@@ -41,8 +43,13 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
         <div
           onFocus={() => innerRef.current?.focus()}
           onBlur={() => innerRef.current?.blur()}
+          // Inline border on error guarantees the rose highlight regardless of class cascade.
+          style={error ? { borderColor: "#fb7185" } : undefined}
           className={clx(
-            "relative flex items-center text-base-regular border border-black/[0.08] bg-white rounded-xl transition-colors hover:border-black/15 focus-within:border-aquora-primary focus-within:ring-2 focus-within:ring-aquora-primary/20",
+            "relative flex items-center text-base-regular border bg-white rounded-xl transition-colors",
+            error
+              ? "border-rose-400 focus-within:ring-2 focus-within:ring-rose-200"
+              : "border-black/[0.08] hover:border-black/15 focus-within:border-aquora-primary focus-within:ring-2 focus-within:ring-aquora-primary/20",
             className,
             {
               "text-aquora-muted": isPlaceholder,
@@ -64,6 +71,11 @@ const NativeSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
             <ChevronUpDown />
           </span>
         </div>
+        {error && (
+          <p className="mt-1.5 text-xs text-rose-600" role="alert">
+            {error}
+          </p>
+        )}
       </div>
     )
   }
