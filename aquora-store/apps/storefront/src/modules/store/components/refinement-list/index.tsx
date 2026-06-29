@@ -7,6 +7,7 @@ import {
   OPTION_VALUE_QUERY_KEY,
   parseOptionValueIds,
 } from "@lib/util/product-option-filters"
+import Facets from "./facets"
 import OptionsPicker from "./options-picker"
 import SortProducts, { SortOptions } from "./sort-products"
 import { categories } from "@lib/aquora/categories"
@@ -72,6 +73,9 @@ const RefinementList = ({
         setQueryParams={setQueryParams}
         data-testid={dataTestId}
       />
+      {/* Brand + price-range facets — URL-driven (shareable, refresh-safe), rendered inline
+          alongside the inline product grid. Shown on both the store and category PLPs. */}
+      <Facets />
       {!hideOptionsPicker && (
         <OptionsPicker
           selectedValueIds={selectedOptionValueIds}

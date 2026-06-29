@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { FacetFilters } from "@lib/util/facet-filters"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
@@ -92,6 +93,68 @@ export const listProducts = async ({
     })
 }
 
+// Cheapest in-stock-or-not variant price (matches getProductPrice's cheapestPrice logic),
+// used to test a product against the price-range facet. Returns null when no variant carries
+// a calculated price so price-filtered products without prices are excluded, not treated as 0.
+const cheapestVariantPrice = (
+  product: HttpTypes.StoreProduct
+): number | null => {
+  const amounts = (product.variants || [])
+    .map((v) => (v as any)?.calculated_price?.calculated_amount)
+    .filter((a): a is number => typeof a === "number")
+
+  return amounts.length ? Math.min(...amounts) : null
+}
+
+// Apply the URL-driven brand + price facets to an already-fetched product window.
+// Brand lives in product metadata.brand (see backend extract-brands.ts); price is the
+// region-specific cheapest calculated_price, so both are filtered in-memory here rather
+// than server-side (the Medusa store list params expose neither metadata nor price-range).
+const applyFacetFilters = (
+  products: HttpTypes.StoreProduct[],
+  facets?: FacetFilters
+): HttpTypes.StoreProduct[] => {
+  if (!facets) {
+    return products
+  }
+
+  const brandSet =
+    facets.brands.length > 0
+      ? new Set(facets.brands.map((b) => b.toLowerCase()))
+      : null
+  const { minPrice, maxPrice } = facets
+
+  const needsPrice = minPrice != null || maxPrice != null
+
+  if (!brandSet && !needsPrice) {
+    return products
+  }
+
+  return products.filter((p) => {
+    if (brandSet) {
+      const brand = (p.metadata?.brand as string | undefined) || ""
+      if (!brandSet.has(brand.toLowerCase())) {
+        return false
+      }
+    }
+
+    if (needsPrice) {
+      const price = cheapestVariantPrice(p)
+      if (price == null) {
+        return false
+      }
+      if (minPrice != null && price < minPrice) {
+        return false
+      }
+      if (maxPrice != null && price > maxPrice) {
+        return false
+      }
+    }
+
+    return true
+  })
+}
+
 /**
  * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
  * It will then return the paginated products based on the page and limit parameters.
@@ -102,12 +165,14 @@ export const listProductsWithSort = async ({
   sortBy = "created_at",
   countryCode,
   optionValueIds,
+  facetFilters,
 }: {
   page?: number
   queryParams?: ProductListQueryParams
   sortBy?: SortOptions
   countryCode: string
   optionValueIds?: OptionValueIds
+  facetFilters?: FacetFilters
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -130,11 +195,15 @@ export const listProductsWithSort = async ({
     countryCode,
   })
 
-  const sortedProducts = sortProducts(products, sortBy)
+  // Brand + price facets narrow the fetched window before sort/pagination so the grid,
+  // the count and the page links all reflect the active filters together.
+  const facetedProducts = applyFacetFilters(products, facetFilters)
+
+  const sortedProducts = sortProducts(facetedProducts, sortBy)
 
   const pageParam = (page - 1) * limit
 
-  const filteredCount = products.length
+  const filteredCount = facetedProducts.length
 
   const nextPage = filteredCount > pageParam + limit ? pageParam + limit : null
 
