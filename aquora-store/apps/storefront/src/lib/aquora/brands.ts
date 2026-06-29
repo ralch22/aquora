@@ -157,3 +157,27 @@ export const brands = [
     "count": 3
   }
 ] as const;
+
+export type Brand = { name: string; count: number }
+
+// URL slug for a brand name. Lowercase, & → "and", any run of non-alphanumerics → a single
+// hyphen, trimmed. e.g. "AstralPool" → "astralpool", "Rosa Gres" → "rosa-gres",
+// "E-CLEAR" → "e-clear". Used by the /brands/[brand] landing pages and the sitemap.
+export function brandSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+// slug → brand lookup (first brand wins on the off chance two names slugify the same).
+const bySlug: Record<string, Brand> = {}
+for (const b of brands) {
+  const slug = brandSlug(b.name)
+  if (!(slug in bySlug)) bySlug[slug] = b
+}
+
+export function findBrandBySlug(slug: string): Brand | undefined {
+  return bySlug[slug]
+}

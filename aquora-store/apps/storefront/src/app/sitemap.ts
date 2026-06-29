@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next"
 import { listBlogSlugs } from "./[countryCode]/(main)/blog/_lib/markdown"
 import { listGuides } from "@lib/aquora/guides"
+import { brands, brandSlug } from "@lib/aquora/brands"
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000"
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -52,6 +53,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const g of listGuides()) {
     entries.push({ url: `${BASE}/${CC}/guides/${g.slug}`, lastModified: now, changeFrequency: "monthly", priority: 0.6 })
+  }
+  for (const b of brands) {
+    entries.push({ url: `${BASE}/${CC}/brands/${brandSlug(b.name)}`, lastModified: now, changeFrequency: "weekly", priority: 0.6 })
   }
   for (const handle of categories) {
     entries.push({ url: `${BASE}/${CC}/categories/${handle}`, lastModified: now, changeFrequency: "weekly", priority: 0.7 })

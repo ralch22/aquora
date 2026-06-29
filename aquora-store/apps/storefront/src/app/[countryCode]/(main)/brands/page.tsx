@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ImageBanner from "@modules/common/components/image-banner"
-import { brands } from "@lib/aquora/brands"
+import { brands, brandSlug } from "@lib/aquora/brands"
 
 export const metadata: Metadata = {
   title: "Brands — Aquora",
@@ -32,7 +32,7 @@ export default function BrandsPage() {
         {brands.map((b) => (
           <li key={b.name}>
             <LocalizedClientLink
-              href={`/search?q=${encodeURIComponent(b.name)}`}
+              href={`/brands/${brandSlug(b.name)}`}
               className="group flex items-center justify-between rounded-large border border-black/5 bg-white px-5 py-4 hover:border-aquora-primary hover:shadow-sm transition-all duration-150"
             >
               <span className="font-heading text-aquora-ink group-hover:text-aquora-primary transition-colors duration-150">{b.name}</span>
