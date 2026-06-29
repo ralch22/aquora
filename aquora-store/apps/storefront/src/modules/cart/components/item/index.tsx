@@ -27,6 +27,11 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   // back to the old value until the server round-trip + revalidation lands. Cleared once
   // the reconciled item.quantity arrives, or reverted on error.
   const [optimisticQty, setOptimisticQty] = useState<number | null>(null)
+  // Optimistic removal: the row fades/collapses the instant Delete is tapped (mirroring
+  // the optimistic-qty pattern) rather than waiting for the server round-trip + revalidation.
+  // Successful deletes unmount the row via revalidation; a failed delete reverts this flag
+  // and DeleteButton surfaces its existing rose error message.
+  const [removing, setRemoving] = useState(false)
 
   useEffect(() => {
     setOptimisticQty(null)
@@ -63,7 +68,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const maxQuantity = Math.max(item.quantity, Math.min(inStock, CAP))
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
+    <Table.Row
+      className={clx(
+        "w-full transition-all duration-300 ease-out",
+        removing && "opacity-0 -translate-y-1 pointer-events-none"
+      )}
+      data-testid="product-row"
+    >
       <Table.Cell className="!pl-0 p-4 w-24">
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
@@ -121,7 +132,12 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       {type === "full" && (
         <Table.Cell>
           <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
+            <DeleteButton
+              id={item.id}
+              onRemoving={() => setRemoving(true)}
+              onRemoveError={() => setRemoving(false)}
+              data-testid="product-delete-button"
+            />
             <CartItemSelect
               value={optimisticQty ?? item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
