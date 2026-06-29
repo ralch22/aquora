@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { addToCart } from "@lib/data/cart"
 import { trackAddToCart } from "@lib/analytics"
-import { trackRetailEvent } from "@lib/aquora/retail-track"
+import { trackRetailEvent, getVisitorId } from "@lib/aquora/retail-track"
 import { toast } from "@modules/common/components/toast"
 
 type Suggestion = {
@@ -54,6 +54,14 @@ const CloseIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+)
+
+const ClearIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 )
 
@@ -123,6 +131,33 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
 // Keep the rendered transcript bounded — each message can carry a base64 image data URL, so
 // an unbounded list leaks memory over a long session.
 const MAX_MESSAGES = 40
+
+// Durable conversation memory: persist the transcript + Gemini history to localStorage keyed
+// by the shared aq_vid visitor id, so Ask-Aqua keeps context across reloads/navigation.
+const CHAT_KEY_PREFIX = "aq_chat_"
+const MAX_STORED_TURNS = 12 // bound localStorage size — last ~12 turns of plain text only
+
+type StoredMessage = {
+  role: "user" | "assistant"
+  text: string
+  suggestions?: Suggestion[]
+  checkout?: boolean
+}
+type StoredChat = {
+  v: 1
+  messages: StoredMessage[]
+  history: { role: "user" | "model"; parts: { text: string }[] }[]
+}
+
+// Light PII redaction for anything written to localStorage: never persist emails or
+// order-number-like digit runs in plaintext (support exchanges often contain them).
+function redactForStorage(text: string): string {
+  return (text || "")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "[email]")
+    .replace(/\b\d{6,}\b/g, "[number]")
+}
+
+const chatKey = (vid: string) => CHAT_KEY_PREFIX + vid
 
 // Encode an AudioBuffer to a 16 kHz mono 16-bit PCM WAV. Google STT decodes WAV reliably,
 // while browser recording formats differ (Chrome → WebM/Opus, Safari/iOS → MP4/AAC, which
@@ -265,17 +300,62 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
   const vidRef = useRef<string>("")
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const speakGenRef = useRef(0)
+  // Gate persistence until after the initial rehydrate, so the empty greeting-only state
+  // can't clobber a stored conversation before it's loaded.
+  const hydratedRef = useRef(false)
 
+  // On mount: resolve the shared visitor id and rehydrate the persisted conversation
+  // (transcript + Gemini history) so Ask-Aqua survives a reload or in-app navigation.
   useEffect(() => {
+    const vid = getVisitorId()
+    vidRef.current = vid
     try {
-      let v = localStorage.getItem("aq_vid")
-      if (!v) {
-        v = "v_" + Math.random().toString(36).slice(2) + Date.now().toString(36)
-        localStorage.setItem("aq_vid", v)
+      const raw = vid && vid !== "anon" ? localStorage.getItem(chatKey(vid)) : null
+      if (raw) {
+        const parsed = JSON.parse(raw) as StoredChat
+        if (parsed && Array.isArray(parsed.messages) && parsed.messages.length) {
+          setMessages([GREETING, ...parsed.messages.map((m) => ({ ...m }))])
+        }
+        if (parsed && Array.isArray(parsed.history)) {
+          historyRef.current = parsed.history.slice(-MAX_STORED_TURNS)
+        }
       }
-      vidRef.current = v
     } catch {}
+    hydratedRef.current = true
   }, [])
+
+  // Persist the conversation whenever the transcript changes. historyRef is updated
+  // synchronously in recordTurn (before this effect re-runs), so it's current here.
+  // Only plain text turns are stored — image/audio payloads are dropped to stay small.
+  useEffect(() => {
+    if (!hydratedRef.current) return
+    const vid = vidRef.current
+    if (!vid || vid === "anon") return
+    try {
+      const stored: StoredMessage[] = messages
+        .slice(1) // drop the static greeting (re-added on rehydrate)
+        .filter((m) => !m.pending)
+        .map((m) => ({
+          role: m.role,
+          text: redactForStorage(m.text),
+          ...(m.suggestions && m.suggestions.length ? { suggestions: m.suggestions } : {}),
+          ...(m.checkout ? { checkout: true } : {}),
+        }))
+        .slice(-MAX_STORED_TURNS * 2)
+      if (stored.length === 0) {
+        localStorage.removeItem(chatKey(vid))
+        return
+      }
+      const payload: StoredChat = {
+        v: 1,
+        messages: stored,
+        history: historyRef.current
+          .slice(-MAX_STORED_TURNS)
+          .map((h) => ({ role: h.role, parts: [{ text: redactForStorage(h.parts[0]?.text || "") }] })),
+      }
+      localStorage.setItem(chatKey(vid), JSON.stringify(payload))
+    } catch {}
+  }, [messages])
 
   const recordTurn = (userText: string, replyText: string) => {
     historyRef.current = [
@@ -331,6 +411,16 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
     } catch {}
     try {
       window.speechSynthesis?.cancel()
+    } catch {}
+  }
+
+  // Reset the on-screen conversation and wipe the persisted history for this visitor.
+  const clearChat = () => {
+    stopSpeaking()
+    historyRef.current = []
+    setMessages([GREETING])
+    try {
+      if (vidRef.current && vidRef.current !== "anon") localStorage.removeItem(chatKey(vidRef.current))
     } catch {}
   }
 
@@ -607,6 +697,17 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
             >
               {speakReplies ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
             </button>
+            {messages.length > 1 && (
+              <button
+                type="button"
+                onClick={clearChat}
+                aria-label="Clear chat"
+                title="Clear chat"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white"
+              >
+                <ClearIcon />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setOpen(false)}
