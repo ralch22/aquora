@@ -2,6 +2,7 @@
 
 import { Table, Text, clx } from "@modules/common/components/ui"
 import { updateLineItem } from "@lib/data/cart"
+import { trackRemoveFromCart } from "@lib/analytics"
 import { HttpTypes } from "@medusajs/types"
 import CartItemSelect from "@modules/cart/components/cart-item-select"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -37,10 +38,23 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     setOptimisticQty(null)
   }, [item.quantity])
 
+  // Real line snapshot for GA4 remove_from_cart (no fabricated values).
+  const removedItem = (qty: number) => ({
+    id: item.variant_id || item.product_id || item.id,
+    name: item.product_title || item.title || "",
+    price: item.unit_price ?? undefined,
+    quantity: qty,
+  })
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
     setOptimisticQty(quantity)
     setUpdating(true)
+
+    // A decrement removes (item.quantity - quantity) units → remove_from_cart for the delta.
+    if (quantity < item.quantity) {
+      trackRemoveFromCart(removedItem(item.quantity - quantity))
+    }
 
     await updateLineItem({
       lineId: item.id,
@@ -134,7 +148,11 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           <div className="flex gap-2 items-center w-28">
             <DeleteButton
               id={item.id}
-              onRemoving={() => setRemoving(true)}
+              onRemoving={() => {
+                // Full line removal → remove_from_cart for the whole quantity.
+                trackRemoveFromCart(removedItem(item.quantity))
+                setRemoving(true)
+              }}
               onRemoveError={() => setRemoving(false)}
               data-testid="product-delete-button"
             />

@@ -5,6 +5,8 @@ import { getReviewAggregates } from "@lib/data/reviews"
 import ProductPreview from "@modules/products/components/product-preview"
 import Carousel from "@modules/common/components/carousel"
 import InteractiveLink from "@modules/common/components/interactive-link"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { toListItems } from "@lib/aquora/list-items"
 
 // A horizontal rail of real products fetched from a category — the homepage's first actual
 // product surfacing. No-ops (renders nothing) if the region/category/products can't be loaded.
@@ -68,13 +70,15 @@ export default async function ProductShelf({
         </div>
         <InteractiveLink href={`/categories/${handle}`}>View all</InteractiveLink>
       </div>
-      <Carousel>
-        {products.map((p) => (
-          <div key={p.id} className="w-[210px] shrink-0 snap-start small:w-[240px]">
-            <ProductPreview product={p} region={region} rating={ratings[p.id]} />
-          </div>
-        ))}
-      </Carousel>
+      <ProductListTracker listName={`category:${handle}`} items={toListItems(products)}>
+        <Carousel>
+          {products.map((p) => (
+            <div key={p.id} className="w-[210px] shrink-0 snap-start small:w-[240px]">
+              <ProductPreview product={p} region={region} rating={ratings[p.id]} />
+            </div>
+          ))}
+        </Carousel>
+      </ProductListTracker>
     </section>
   )
 }

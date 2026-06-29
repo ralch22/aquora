@@ -5,6 +5,8 @@ import { Text } from "@modules/common/components/ui"
 
 import InteractiveLink from "@modules/common/components/interactive-link"
 import ProductPreview from "@modules/products/components/product-preview"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { toListItems } from "@lib/aquora/list-items"
 
 export default async function ProductRail({
   collection,
@@ -38,14 +40,19 @@ export default async function ProductRail({
           View all
         </InteractiveLink>
       </div>
-      <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-24 small:gap-y-36">
-        {pricedProducts &&
-          pricedProducts.map((product) => (
-            <li key={product.id}>
-              <ProductPreview product={product} region={region} rating={ratings[product.id]} isFeatured />
-            </li>
-          ))}
-      </ul>
+      <ProductListTracker
+        listName={`collection:${collection.handle}`}
+        items={toListItems(pricedProducts)}
+      >
+        <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-24 small:gap-y-36">
+          {pricedProducts &&
+            pricedProducts.map((product) => (
+              <li key={product.id}>
+                <ProductPreview product={product} region={region} rating={ratings[product.id]} isFeatured />
+              </li>
+            ))}
+        </ul>
+      </ProductListTracker>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import MobileCheckoutBar from "../components/mobile-checkout-bar"
 import Divider from "@modules/common/components/divider"
 import ImageBanner from "@modules/common/components/image-banner"
 import RecommendedRail from "@modules/home/components/recommended-rail"
+import CartViewTracker from "@modules/analytics/cart-view-tracker"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -40,6 +41,16 @@ const CartTemplate = ({
         </div>
         {cart?.items?.length ? (
           <>
+          {/* GA4 view_cart — inline (no streamed Suspense), real line items + value. */}
+          <CartViewTracker
+            value={Number(cart.item_total ?? cart.subtotal ?? cart.total ?? 0)}
+            items={cart.items.map((li) => ({
+              id: li.variant_id || li.product_id || li.id,
+              name: li.product_title || li.title || "",
+              price: li.unit_price ?? undefined,
+              quantity: li.quantity,
+            }))}
+          />
           <div className="mb-8 border-b border-black/[0.06] pb-6">
             <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />
