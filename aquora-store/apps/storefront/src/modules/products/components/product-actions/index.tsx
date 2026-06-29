@@ -16,6 +16,7 @@ import MobileActions from "./mobile-actions"
 import { PaymentMethods } from "@modules/common/components/payment-trust"
 import { toast } from "@modules/common/components/toast"
 import { useRouter } from "next/navigation"
+import { useExperiment, ADD_TO_CART_CTA } from "@modules/analytics/experiment"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -44,6 +45,8 @@ export default function ProductActions({
   const [isAdding, setIsAdding] = useState(false)
   const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
+  // A/B harness: deterministic, inline-rendered add-to-cart CTA label (control on SSR).
+  const cta = useExperiment(ADD_TO_CART_CTA)
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -266,7 +269,7 @@ export default function ProductActions({
             ? "Select a model"
             : !inStock || !isValidVariant
             ? "Out of stock"
-            : "Add to cart"}
+            : cta.label}
         </Button>
 
         {selectedVariant && inStock && (
@@ -310,6 +313,7 @@ export default function ProductActions({
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
+          ctaLabel={cta.label}
         />
       </div>
     </>

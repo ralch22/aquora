@@ -73,3 +73,14 @@ export function trackPurchase(p: { id: string; value?: number; items?: Item[] })
     items: (p.items || []).map(toItem),
   })
 }
+
+// A/B harness impression: report which variant the visitor was bucketed into so GA4 can
+// segment any downstream conversion (add_to_cart, purchase, …) by variant. Sent both as a
+// discrete event AND as a GA4 user_property, so it can be used as an Exploration dimension
+// or audience condition without joining on the event.
+export function trackExperiment(experimentId: string, variantId: string) {
+  if (typeof window === "undefined") return
+  emit("experiment_impression", undefined, { experiment_id: experimentId, variant_id: variantId })
+  const dl = (window.dataLayer = window.dataLayer || [])
+  ;(dl as unknown[]).push(["set", "user_properties", { [`exp_${experimentId}`]: variantId }])
+}
