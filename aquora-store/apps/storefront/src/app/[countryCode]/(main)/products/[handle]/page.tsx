@@ -4,6 +4,7 @@ import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
+import { buildAlternates } from "@lib/util/seo"
 
 // Render dynamically (per request) rather than statically prerendering. The PDP now resolves its
 // pricing/related/FBT INLINE (no streamed <Suspense>) because deferred Suspense boundaries don't
@@ -98,12 +99,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const overview = ((product.metadata as any)?.overview as string | undefined) || product.description || product.title
   const metaDescription = overview.replace(/\s+/g, " ").trim().slice(0, 160)
 
+  const alternates = await buildAlternates(
+    `/products/${handle}`,
+    params.countryCode
+  )
+
   return {
     title: `${product.title} | Aquora`,
     description: metaDescription,
+    alternates,
     openGraph: {
       title: `${product.title} | Aquora`,
       description: metaDescription,
+      url: alternates.canonical as string,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }

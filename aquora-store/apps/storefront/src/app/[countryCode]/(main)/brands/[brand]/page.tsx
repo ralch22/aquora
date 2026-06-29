@@ -13,6 +13,7 @@ import { Pagination } from "@modules/store/components/pagination"
 import { listRegions } from "@lib/data/regions"
 import { getBaseURL } from "@lib/util/env"
 import { brands, brandSlug, findBrandBySlug } from "@lib/aquora/brands"
+import { buildAlternates } from "@lib/util/seo"
 import { StoreRegion } from "@medusajs/types"
 
 const BACKEND = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
@@ -90,7 +91,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical: url },
+    alternates: await buildAlternates(`/brands/${slug}`, countryCode),
     openGraph: { title, description, url, type: "website" },
   }
 }
