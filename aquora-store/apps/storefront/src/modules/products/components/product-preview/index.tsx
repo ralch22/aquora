@@ -23,7 +23,7 @@ export default async function ProductPreview({
   const hasVideo = !!getProductVideo(product.handle)
 
   return (
-    <div className="group relative block" data-testid="product-wrapper">
+    <div className="group relative block" data-testid="product-wrapper" data-product-id={product.id}>
       {/* Heart + compare sit OUTSIDE the link — a <button> nested in an <a> still triggers navigation. */}
       <WishlistButton handle={product.handle} floating />
       <CompareButton handle={product.handle} floating />

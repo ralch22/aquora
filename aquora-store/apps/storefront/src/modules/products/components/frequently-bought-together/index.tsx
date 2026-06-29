@@ -4,6 +4,8 @@ import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import { COMPLEMENTARY } from "@lib/aquora/complementary"
 import Product from "../product-preview"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { productToItem } from "@lib/util/product-to-item"
 
 type Props = { product: HttpTypes.StoreProduct; countryCode: string }
 
@@ -48,13 +50,19 @@ export default async function FrequentlyBoughtTogether({ product, countryCode }:
         </span>
         <p className="mt-2 font-heading text-2xl text-aquora-ink">Frequently bought together</p>
       </div>
-      <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-8">
-        {products.map((p) => (
-          <li key={p.id}>
-            <Product region={region} product={p} />
-          </li>
-        ))}
-      </ul>
+      <ProductListTracker
+        listName="frequently_bought_together"
+        listId={product.handle}
+        items={products.map(productToItem)}
+      >
+        <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-8">
+          {products.map((p) => (
+            <li key={p.id}>
+              <Product region={region} product={p} />
+            </li>
+          ))}
+        </ul>
+      </ProductListTracker>
     </div>
   )
 }

@@ -2,6 +2,8 @@ import { getRegion } from "@lib/data/regions"
 import { getCategoryByHandle } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
 import ProductPreview from "@modules/products/components/product-preview"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { productToItem } from "@lib/util/product-to-item"
 import Carousel from "@modules/common/components/carousel"
 import InteractiveLink from "@modules/common/components/interactive-link"
 
@@ -64,13 +66,19 @@ export default async function ProductShelf({
         </div>
         <InteractiveLink href={`/categories/${handle}`}>View all</InteractiveLink>
       </div>
-      <Carousel>
-        {products.map((p) => (
-          <div key={p.id} className="w-[210px] shrink-0 snap-start small:w-[240px]">
-            <ProductPreview product={p} region={region} />
-          </div>
-        ))}
-      </Carousel>
+      <ProductListTracker
+        listName={`shelf:${handle}`}
+        listId={handle}
+        items={products.map(productToItem)}
+      >
+        <Carousel>
+          {products.map((p) => (
+            <div key={p.id} className="w-[210px] shrink-0 snap-start small:w-[240px]">
+              <ProductPreview product={p} region={region} />
+            </div>
+          ))}
+        </Carousel>
+      </ProductListTracker>
     </section>
   )
 }

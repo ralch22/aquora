@@ -2,6 +2,8 @@ import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductPreview from "@modules/products/components/product-preview"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
+import { productToItem } from "@lib/util/product-to-item"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -106,22 +108,28 @@ export default async function PaginatedProducts({
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
+  // Real, non-fabricated list identity for GA4 attribution (the scope this grid renders).
+  const listName = collectionId ? "collection" : categoryId ? "category" : "store"
+  const listId = collectionId || categoryId
+
   return (
     <>
-      <ul
-        className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
-        data-testid="products-list"
-      >
-        {products.flatMap((p, i) => {
-          const card = (
-            <li key={p.id}>
-              <ProductPreview product={p} region={region} />
-            </li>
-          )
-          // Inject the promo tile once, after the 4th product on the first page.
-          return page === 1 && i === 4 ? [<GridPromoTile key="grid-promo" />, card] : [card]
-        })}
-      </ul>
+      <ProductListTracker listName={listName} listId={listId} items={products.map(productToItem)}>
+        <ul
+          className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+          data-testid="products-list"
+        >
+          {products.flatMap((p, i) => {
+            const card = (
+              <li key={p.id}>
+                <ProductPreview product={p} region={region} />
+              </li>
+            )
+            // Inject the promo tile once, after the 4th product on the first page.
+            return page === 1 && i === 4 ? [<GridPromoTile key="grid-promo" />, card] : [card]
+          })}
+        </ul>
+      </ProductListTracker>
       {totalPages > 1 && (
         <Pagination
           data-testid="product-pagination"

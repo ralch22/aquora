@@ -73,3 +73,48 @@ export function trackPurchase(p: { id: string; value?: number; items?: Item[] })
     items: (p.items || []).map(toItem),
   })
 }
+
+// list_name/list_id describe the surface a product appeared in (e.g. "search",
+// "category:<handle>", "related", "featured"). They are echoed onto each item so
+// GA4 can attribute select_item clicks back to the originating list.
+type List = { listName: string; listId?: string }
+const listParams = (l: List) => ({
+  item_list_name: l.listName,
+  ...(l.listId ? { item_list_id: l.listId } : {}),
+})
+
+export function trackViewItemList(p: List & { items: Item[] }) {
+  if (!p.items.length) return
+  emit("view_item_list", {
+    ...listParams(p),
+    items: p.items.map((i) => ({ ...toItem(i), ...listParams(p) })),
+  })
+}
+
+export function trackSelectItem(p: List & { item: Item }) {
+  emit("select_item", {
+    ...listParams(p),
+    items: [{ ...toItem(p.item), ...listParams(p) }],
+  })
+}
+
+export function trackSearch(searchTerm: string) {
+  if (!searchTerm) return
+  emit("search", undefined, { search_term: searchTerm })
+}
+
+export function trackViewCart(p: { value?: number; items?: Item[] }) {
+  emit("view_cart", {
+    currency: "AED",
+    value: Number(p.value ?? 0),
+    items: (p.items || []).map(toItem),
+  })
+}
+
+export function trackRemoveFromCart(i: Item) {
+  emit("remove_from_cart", {
+    currency: "AED",
+    value: Number(i.price ?? 0) * Number(i.quantity ?? 1),
+    items: [toItem({ ...i, quantity: i.quantity ?? 1 })],
+  })
+}

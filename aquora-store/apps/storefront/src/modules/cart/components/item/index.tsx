@@ -2,6 +2,7 @@
 
 import { Table, Text, clx } from "@modules/common/components/ui"
 import { updateLineItem } from "@lib/data/cart"
+import { trackRemoveFromCart } from "@lib/analytics"
 import { HttpTypes } from "@medusajs/types"
 import CartItemSelect from "@modules/cart/components/cart-item-select"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -37,8 +38,20 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     setOptimisticQty(null)
   }, [item.quantity])
 
+  // GA4 item shape for this line (real values only — variant/product id, title, unit price).
+  const removeItem = (quantity: number) => ({
+    id: (item as any).variant_id || item.id,
+    name: item.product_title || (item as any).title,
+    price: (item as any).unit_price,
+    quantity,
+  })
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
+    // A decrement removes (item.quantity - quantity) units from the cart.
+    if (quantity < item.quantity) {
+      trackRemoveFromCart(removeItem(item.quantity - quantity))
+    }
     setOptimisticQty(quantity)
     setUpdating(true)
 
@@ -136,6 +149,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               id={item.id}
               onRemoving={() => setRemoving(true)}
               onRemoveError={() => setRemoving(false)}
+              onDelete={() => trackRemoveFromCart(removeItem(item.quantity))}
               data-testid="product-delete-button"
             />
             <CartItemSelect

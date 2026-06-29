@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getProductVideo } from "@lib/aquora/videos"
 import SearchTracker from "@modules/analytics/search-tracker"
+import ProductListTracker from "@modules/analytics/product-list-tracker"
 import ImageBanner from "@modules/common/components/image-banner"
 
 export const metadata: Metadata = {
@@ -289,10 +290,19 @@ export default async function SearchPage(props: {
             )}
 
             {products.length > 0 ? (
+              <ProductListTracker
+                listName={isBrowse ? (browseLabel ? `browse:${browseLabel}` : "browse") : "search"}
+                listId={state.q || (state.cat.length === 1 ? state.cat[0] : undefined)}
+                items={products.map((p) => ({
+                  id: p.id || p.handle,
+                  name: p.title,
+                  ...(p.price != null ? { price: Number(p.price) } : {}),
+                }))}
+              >
               <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-10">
                 {products.map((p) => (
                   <li key={p.handle}>
-                    <LocalizedClientLink href={`/products/${p.handle}`} className="group block">
+                    <LocalizedClientLink href={`/products/${p.handle}`} className="group block" data-product-id={p.id || p.handle}>
                       <div className="relative aspect-square bg-aquora-surface rounded-large overflow-hidden border border-black/5">
                         {p.thumbnail ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -316,6 +326,7 @@ export default async function SearchPage(props: {
                   </li>
                 ))}
               </ul>
+              </ProductListTracker>
             ) : (
               <div className="rounded-large border border-black/5 bg-aquora-surface p-8 text-center">
                 <p className="text-aquora-ink font-heading text-lg mb-1">No matches{hasFilters ? " with these filters" : ` for “${state.q}”`}.</p>

@@ -6,6 +6,7 @@ import MobileCheckoutBar from "../components/mobile-checkout-bar"
 import Divider from "@modules/common/components/divider"
 import ImageBanner from "@modules/common/components/image-banner"
 import RecommendedRail from "@modules/home/components/recommended-rail"
+import CartViewTracker from "@modules/analytics/cart-view-tracker"
 import { HttpTypes } from "@medusajs/types"
 
 const CartTemplate = ({
@@ -40,6 +41,15 @@ const CartTemplate = ({
         </div>
         {cart?.items?.length ? (
           <>
+          <CartViewTracker
+            value={(cart as any).total}
+            items={(cart.items || []).map((i: any) => ({
+              id: i.variant_id || i.id,
+              name: i.product_title || i.title,
+              price: i.unit_price,
+              quantity: i.quantity,
+            }))}
+          />
           <div className="mb-8 border-b border-black/[0.06] pb-6">
             <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-aquora-accent" />

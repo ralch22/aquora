@@ -9,6 +9,7 @@ const DeleteButton = ({
   className,
   onRemoving,
   onRemoveError,
+  onDelete,
 }: {
   id: string
   children?: React.ReactNode
@@ -17,6 +18,8 @@ const DeleteButton = ({
   // collapse/fade before the server round-trip; onRemoveError reverts it on failure.
   onRemoving?: () => void
   onRemoveError?: () => void
+  // Fired once when a removal is initiated (used for GA4 remove_from_cart).
+  onDelete?: () => void
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +28,7 @@ const DeleteButton = ({
     setIsDeleting(true)
     setError(null)
     onRemoving?.()
+    onDelete?.()
     await deleteLineItem(id).catch((_err) => {
       setIsDeleting(false)
       setError("Couldn't remove this — please try again.")
