@@ -7,7 +7,17 @@ import {
   OPTION_VALUE_QUERY_KEY,
   parseOptionValueIds,
 } from "@lib/util/product-option-filters"
+import {
+  BRAND_QUERY_KEY,
+  MAX_PRICE_QUERY_KEY,
+  MIN_PRICE_QUERY_KEY,
+  PriceRange,
+  parseBrandFilters,
+  parsePriceRange,
+} from "@lib/util/product-facet-filters"
 import OptionsPicker from "./options-picker"
+import BrandFilter from "./brand-filter"
+import PriceFilter from "./price-filter"
 import SortProducts, { SortOptions } from "./sort-products"
 import { categories } from "@lib/aquora/categories"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -65,6 +75,34 @@ const RefinementList = ({
       )
     })
 
+  const selectedBrands = useMemo(
+    () => parseBrandFilters(searchParams),
+    [searchParams]
+  )
+
+  const setBrands = (nextBrands: string[]) =>
+    updateQueryParams((params) => {
+      params.delete(BRAND_QUERY_KEY)
+      nextBrands.forEach((brand) => params.append(BRAND_QUERY_KEY, brand))
+    })
+
+  const priceRange = useMemo(
+    () => parsePriceRange(searchParams),
+    [searchParams]
+  )
+
+  const setPriceRange = (range: PriceRange) =>
+    updateQueryParams((params) => {
+      params.delete(MIN_PRICE_QUERY_KEY)
+      params.delete(MAX_PRICE_QUERY_KEY)
+      if (range.min !== undefined) {
+        params.set(MIN_PRICE_QUERY_KEY, String(range.min))
+      }
+      if (range.max !== undefined) {
+        params.set(MAX_PRICE_QUERY_KEY, String(range.max))
+      }
+    })
+
   return (
     <div className="flex flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
       <SortProducts
@@ -78,6 +116,8 @@ const RefinementList = ({
           setOptionValueIds={setOptionValueIds}
         />
       )}
+      <BrandFilter selectedBrands={selectedBrands} setBrands={setBrands} />
+      <PriceFilter priceRange={priceRange} setPriceRange={setPriceRange} />
       <div className="flex flex-col gap-y-3">
         <span className="text-sm font-semibold text-aquora-ink">Shop by category</span>
         <ul className="flex flex-col gap-y-1.5">

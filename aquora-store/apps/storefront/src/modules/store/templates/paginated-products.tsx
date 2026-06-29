@@ -1,6 +1,7 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { BrandFilters, PriceRange } from "@lib/util/product-facet-filters"
 import ProductPreview from "@modules/products/components/product-preview"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { Pagination } from "@modules/store/components/pagination"
@@ -59,6 +60,8 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   optionValueIds,
+  brandFilters,
+  priceRange,
 }: {
   sortBy?: SortOptions
   page: number
@@ -67,6 +70,8 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
   optionValueIds?: OptionValueIds
+  brandFilters?: BrandFilters
+  priceRange?: PriceRange
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: 12,
@@ -102,6 +107,8 @@ export default async function PaginatedProducts({
     sortBy,
     countryCode,
     optionValueIds,
+    brandFilters,
+    priceRange,
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)

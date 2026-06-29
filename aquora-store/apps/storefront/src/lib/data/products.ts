@@ -2,6 +2,11 @@
 
 import { sdk } from "@lib/config"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import {
+  BrandFilters,
+  PriceRange,
+  filterProductsByFacets,
+} from "@lib/util/product-facet-filters"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -102,12 +107,16 @@ export const listProductsWithSort = async ({
   sortBy = "created_at",
   countryCode,
   optionValueIds,
+  brandFilters,
+  priceRange,
 }: {
   page?: number
   queryParams?: ProductListQueryParams
   sortBy?: SortOptions
   countryCode: string
   optionValueIds?: OptionValueIds
+  brandFilters?: BrandFilters
+  priceRange?: PriceRange
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -118,6 +127,14 @@ export const listProductsWithSort = async ({
     new Set((optionValueIds || []).filter(Boolean))
   )
 
+  // Brand + price filters are applied to the fetched window (the store API can't
+  // query metadata.brand / calculated_price). Widen the bounded window when those
+  // facets are active so matches beyond the first 100 default-ordered SKUs surface.
+  const facetsActive =
+    !!(brandFilters && brandFilters.length) ||
+    !!(priceRange && (priceRange.min !== undefined || priceRange.max !== undefined))
+  const fetchLimit = facetsActive ? 200 : 100
+
   const {
     response: { products },
   } = await listProducts({
@@ -125,16 +142,21 @@ export const listProductsWithSort = async ({
     queryParams: {
       ...queryParams,
       ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
-      limit: 100,
+      limit: fetchLimit,
     },
     countryCode,
   })
 
-  const sortedProducts = sortProducts(products, sortBy)
+  const facetedProducts = filterProductsByFacets(products, {
+    brands: brandFilters,
+    price: priceRange,
+  })
+
+  const sortedProducts = sortProducts(facetedProducts, sortBy)
 
   const pageParam = (page - 1) * limit
 
-  const filteredCount = products.length
+  const filteredCount = facetedProducts.length
 
   const nextPage = filteredCount > pageParam + limit ? pageParam + limit : null
 

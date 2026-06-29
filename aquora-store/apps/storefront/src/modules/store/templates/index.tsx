@@ -1,4 +1,5 @@
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { BrandFilters, PriceRange } from "@lib/util/product-facet-filters"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import ImageBanner from "@modules/common/components/image-banner"
@@ -16,11 +17,15 @@ const StoreTemplate = ({
   page,
   countryCode,
   optionValueIds,
+  brandFilters,
+  priceRange,
 }: {
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  brandFilters?: BrandFilters
+  priceRange?: PriceRange
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -53,6 +58,8 @@ const StoreTemplate = ({
           page={pageNumber}
           countryCode={countryCode}
           optionValueIds={optionValueIds}
+          brandFilters={brandFilters}
+          priceRange={priceRange}
         />
       </div>
     </div>

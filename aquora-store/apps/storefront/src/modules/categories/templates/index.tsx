@@ -8,6 +8,7 @@ import RelatedCategories from "@modules/categories/components/related-categories
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { BrandFilters, PriceRange } from "@lib/util/product-facet-filters"
 import { categories as aquoraCategories } from "@lib/aquora/categories"
 import ImageBanner from "@modules/common/components/image-banner"
 import ProductBanner, { type ProductBannerProps } from "@modules/common/components/product-banner"
@@ -53,12 +54,16 @@ export default function CategoryTemplate({
   page,
   countryCode,
   optionValueIds,
+  brandFilters,
+  priceRange,
 }: {
   category: HttpTypes.StoreProductCategory
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  brandFilters?: BrandFilters
+  priceRange?: PriceRange
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -120,15 +125,6 @@ export default function CategoryTemplate({
             ))}
           <h1 data-testid="category-page-title">{category.name}</h1>
         </div>
-        <LocalizedClientLink
-          href={`/search?cat=${encodeURIComponent(category.name)}`}
-          className="inline-flex items-center gap-2 mb-6 text-sm font-semibold text-aquora-primary hover:underline"
-        >
-          Filter by brand &amp; price
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M3 8h10M9 4l4 4-4 4" />
-          </svg>
-        </LocalizedClientLink>
         {(() => {
           const intro =
             category.description ||
@@ -229,6 +225,8 @@ export default function CategoryTemplate({
           categoryId={category.id}
           countryCode={countryCode}
           optionValueIds={optionValueIds}
+          brandFilters={brandFilters}
+          priceRange={priceRange}
         />
         <RelatedCategories handle={category.handle} />
       </div>

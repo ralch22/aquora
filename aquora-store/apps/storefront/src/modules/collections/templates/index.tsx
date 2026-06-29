@@ -3,6 +3,7 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import { HttpTypes } from "@medusajs/types"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { BrandFilters, PriceRange } from "@lib/util/product-facet-filters"
 import ImageBanner from "@modules/common/components/image-banner"
 
 export default function CollectionTemplate({
@@ -11,12 +12,16 @@ export default function CollectionTemplate({
   page,
   countryCode,
   optionValueIds,
+  brandFilters,
+  priceRange,
 }: {
   sortBy?: SortOptions
   collection: HttpTypes.StoreCollection
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  brandFilters?: BrandFilters
+  priceRange?: PriceRange
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -49,6 +54,8 @@ export default function CollectionTemplate({
           collectionId={collection.id}
           countryCode={countryCode}
           optionValueIds={optionValueIds}
+          brandFilters={brandFilters}
+          priceRange={priceRange}
         />
       </div>
     </div>

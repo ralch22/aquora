@@ -7,6 +7,10 @@ import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
+import {
+  parseBrandFilters,
+  parsePriceRange,
+} from "@lib/util/product-facet-filters"
 
 type Props = {
   params: Promise<{ handle: string; countryCode: string }>
@@ -81,6 +85,8 @@ export default async function CollectionPage(props: Props) {
   const params = await props.params
   const { sortBy, page } = searchParams
   const optionValueIds = parseOptionValueIds(searchParams)
+  const brandFilters = parseBrandFilters(searchParams)
+  const priceRange = parsePriceRange(searchParams)
 
   const collection = await getCollectionByHandle(params.handle).then(
     (collection) => collection
@@ -97,6 +103,8 @@ export default async function CollectionPage(props: Props) {
       sortBy={sortBy}
       countryCode={params.countryCode}
       optionValueIds={optionValueIds}
+      brandFilters={brandFilters}
+      priceRange={priceRange}
     />
   )
 }
