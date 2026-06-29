@@ -26,11 +26,15 @@ jobs:
         run: npm install --legacy-peer-deps --no-audit --no-fund
       - name: Typecheck
         run: npx tsc --noEmit -p tsconfig.json
+      # `next build` does build-time catalog data-collection that needs a VALID publishable key
+      # (the public pk_, not a secret). It runs only when the owner sets the repo Actions variable
+      # NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY (Settings → Secrets and variables → Actions → Variables).
+      # Until then, typecheck is the gate; the full production build always runs at deploy (Cloud Build).
       - name: Build
+        if: ${{ vars.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY != '' }}
         env:
-          # Placeholders — these are inlined at build time; the client reads real values at runtime.
-          NEXT_PUBLIC_MEDUSA_BACKEND_URL: https://api.aquora.ae
-          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: pk_ci_placeholder
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${{ vars.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 'https://api.aquora.ae' }}
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }}
           NEXT_TELEMETRY_DISABLED: "1"
         run: npm run build
 
