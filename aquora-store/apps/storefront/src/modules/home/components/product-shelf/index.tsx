@@ -1,6 +1,7 @@
 import { getRegion } from "@lib/data/regions"
 import { getCategoryByHandle } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
+import { getReviewAggregates } from "@lib/data/reviews"
 import ProductPreview from "@modules/products/components/product-preview"
 import Carousel from "@modules/common/components/carousel"
 import InteractiveLink from "@modules/common/components/interactive-link"
@@ -48,6 +49,9 @@ export default async function ProductShelf({
   }
   if (!products?.length) return null
 
+  // One batched request for real review ratings across the rail (no per-card N+1).
+  const ratings = await getReviewAggregates(products.map((p) => p.id))
+
   return (
     <section className="content-container py-14 small:py-20">
       <div className="mb-8 flex items-end justify-between gap-4">
@@ -67,7 +71,7 @@ export default async function ProductShelf({
       <Carousel>
         {products.map((p) => (
           <div key={p.id} className="w-[210px] shrink-0 snap-start small:w-[240px]">
-            <ProductPreview product={p} region={region} />
+            <ProductPreview product={p} region={region} rating={ratings[p.id]} />
           </div>
         ))}
       </Carousel>

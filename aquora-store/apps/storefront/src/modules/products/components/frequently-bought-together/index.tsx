@@ -1,6 +1,7 @@
 import { listProducts } from "@lib/data/products"
 import { getCategoryByHandle } from "@lib/data/categories"
 import { getRegion } from "@lib/data/regions"
+import { getReviewAggregates } from "@lib/data/reviews"
 import { HttpTypes } from "@medusajs/types"
 import { COMPLEMENTARY } from "@lib/aquora/complementary"
 import Product from "../product-preview"
@@ -40,6 +41,9 @@ export default async function FrequentlyBoughtTogether({ product, countryCode }:
   )
   if (products.length < 2) return null
 
+  // One batched request for real review ratings across the rail (no per-card N+1).
+  const ratings = await getReviewAggregates(products.map((p) => p.id))
+
   return (
     <div className="product-page-constraint">
       <div className="mb-8">
@@ -51,7 +55,7 @@ export default async function FrequentlyBoughtTogether({ product, countryCode }:
       <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-8">
         {products.map((p) => (
           <li key={p.id}>
-            <Product region={region} product={p} />
+            <Product region={region} product={p} rating={ratings[p.id]} />
           </li>
         ))}
       </ul>

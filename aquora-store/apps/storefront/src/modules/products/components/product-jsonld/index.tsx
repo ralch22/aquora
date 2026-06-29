@@ -1,9 +1,13 @@
 import { HttpTypes } from "@medusajs/types"
 import { getBaseURL } from "@lib/util/env"
+import { getReviewAggregate } from "@lib/data/reviews"
 
 // Product structured data (schema.org) for rich results / SEO.
-export default function ProductJsonLd({ product }: { product: HttpTypes.StoreProduct }) {
+export default async function ProductJsonLd({ product }: { product: HttpTypes.StoreProduct }) {
   const base = getBaseURL()
+  // Real review aggregate (count + average). Null when no approved reviews exist or on error —
+  // we then emit NO aggregateRating (never fabricate a rating to win a rich-result snippet).
+  const rating = await getReviewAggregate(product.id)
   const variant: any = product.variants?.[0]
   const price = variant?.calculated_price?.calculated_amount
   const image = product.thumbnail || product.images?.[0]?.url || undefined
@@ -25,6 +29,17 @@ export default function ProductJsonLd({ product }: { product: HttpTypes.StorePro
       ? { additionalProperty: specs.map((s) => ({ "@type": "PropertyValue", name: s.name, value: s.value })) }
       : {}),
     ...(variant?.sku ? { sku: variant.sku } : {}),
+    ...(rating && rating.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: String(rating.average),
+            reviewCount: String(rating.count),
+            bestRating: "5",
+            worstRating: "1",
+          },
+        }
+      : {}),
     ...(price
       ? {
           offers: {
