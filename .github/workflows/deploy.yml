@@ -1,33 +1,53 @@
 name: Deploy
 
 # Auto-deploy the changed service(s) to Cloud Run when a PR merges to main.
-# DORMANT until the owner finishes GCP Workload Identity setup and sets repo
-# variable DEPLOY_ENABLED=true (Settings → Secrets and variables → Actions → Variables)
-# plus secrets GCP_WIF_PROVIDER and GCP_DEPLOY_SA. Until then the deploy jobs skip (no-op).
+# Gated by repo var DEPLOY_ENABLED=true + secrets GCP_WIF_PROVIDER / GCP_DEPLOY_SA.
+# The storefront also needs secret STOREFRONT_ENV_PRODUCTION (its public NEXT_PUBLIC_* build env,
+# which `next build` reads from .env.production — absent in a clean checkout).
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Service to deploy
+        type: choice
+        options: [both, storefront, backend]
+        default: both
 
 permissions:
   contents: read
-  id-token: write   # required for keyless Workload Identity Federation
+  id-token: write
 
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      storefront: ${{ steps.f.outputs.storefront }}
-      backend: ${{ steps.f.outputs.backend }}
+      storefront: ${{ steps.decide.outputs.storefront }}
+      backend: ${{ steps.decide.outputs.backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: f
+        if: github.event_name == 'push'
         with:
           filters: |
             storefront:
               - 'aquora-store/apps/storefront/**'
             backend:
               - 'aquora-store/apps/backend/**'
+      - id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            case "${{ github.event.inputs.service }}" in
+              storefront) echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=false" >> $GITHUB_OUTPUT ;;
+              backend)    echo "storefront=false" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT ;;
+              *)          echo "storefront=true" >> $GITHUB_OUTPUT; echo "backend=true" >> $GITHUB_OUTPUT ;;
+            esac
+          else
+            echo "storefront=${{ steps.f.outputs.storefront }}" >> $GITHUB_OUTPUT
+            echo "backend=${{ steps.f.outputs.backend }}" >> $GITHUB_OUTPUT
+          fi
 
   deploy-storefront:
     needs: changes
@@ -38,16 +58,30 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - id: auth
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_DEPLOY_SA }}
       - uses: google-github-actions/setup-gcloud@v2
+      - name: Write storefront build env (.env.production)
+        env:
+          STOREFRONT_ENV: ${{ secrets.STOREFRONT_ENV_PRODUCTION }}
+        run: printf '%s' "$STOREFRONT_ENV" > aquora-store/apps/storefront/.env.production
       - name: Build & deploy storefront
         run: |
           IMG=europe-west1-docker.pkg.dev/emerge-digital-web-7034/aquora/storefront:${{ github.sha }}
-          gcloud builds submit aquora-store/apps/storefront --tag "$IMG" --machine-type=e2-highcpu-8 --timeout=1800
+          BUILD_ID=$(gcloud builds submit aquora-store/apps/storefront --tag "$IMG" \
+            --machine-type=e2-highcpu-8 --timeout=1800 --async --format='value(id)')
+          echo "Build $BUILD_ID submitted; polling (the deployer can't stream logs, so we poll status)..."
+          while true; do
+            S=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+            echo "  build status: $S"
+            case "$S" in
+              SUCCESS) break ;;
+              FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED|EXPIRED) echo "Build $S — see Cloud Build console $BUILD_ID"; exit 1 ;;
+            esac
+            sleep 10
+          done
           gcloud run deploy aquora-storefront --image "$IMG" --region europe-west1 --quiet
 
   deploy-backend:
@@ -59,8 +93,7 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - id: auth
-        uses: google-github-actions/auth@v2
+      - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_DEPLOY_SA }}
@@ -68,6 +101,17 @@ jobs:
       - name: Build & deploy backend
         run: |
           IMG=europe-west1-docker.pkg.dev/emerge-digital-web-7034/aquora/backend:${{ github.sha }}
-          gcloud builds submit aquora-store/apps/backend --tag "$IMG" --machine-type=e2-highcpu-8 --timeout=1800
+          BUILD_ID=$(gcloud builds submit aquora-store/apps/backend --tag "$IMG" \
+            --machine-type=e2-highcpu-8 --timeout=1800 --async --format='value(id)')
+          echo "Build $BUILD_ID submitted; polling..."
+          while true; do
+            S=$(gcloud builds describe "$BUILD_ID" --format='value(status)')
+            echo "  build status: $S"
+            case "$S" in
+              SUCCESS) break ;;
+              FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED|EXPIRED) echo "Build $S — see Cloud Build console $BUILD_ID"; exit 1 ;;
+            esac
+            sleep 10
+          done
           gcloud run deploy aquora-backend --image "$IMG" --region europe-west1 --quiet
           # If this push added a Medusa migration, run the out-of-band migration job (see AGENTS.md).
