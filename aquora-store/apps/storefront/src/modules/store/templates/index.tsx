@@ -1,3 +1,4 @@
+import { FacetFilters } from "@lib/util/facet-filters"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -16,11 +17,13 @@ const StoreTemplate = ({
   page,
   countryCode,
   optionValueIds,
+  facetFilters,
 }: {
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  facetFilters?: FacetFilters
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -53,6 +56,7 @@ const StoreTemplate = ({
           page={pageNumber}
           countryCode={countryCode}
           optionValueIds={optionValueIds}
+          facetFilters={facetFilters}
         />
       </div>
     </div>

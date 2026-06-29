@@ -1,6 +1,7 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { getReviewAggregates } from "@lib/data/reviews"
+import { FacetFilters } from "@lib/util/facet-filters"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductPreview from "@modules/products/components/product-preview"
 import ProductListTracker from "@modules/analytics/product-list-tracker"
@@ -62,6 +63,7 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   optionValueIds,
+  facetFilters,
 }: {
   sortBy?: SortOptions
   page: number
@@ -70,6 +72,7 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
   optionValueIds?: OptionValueIds
+  facetFilters?: FacetFilters
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: 12,
@@ -105,12 +108,31 @@ export default async function PaginatedProducts({
     sortBy,
     countryCode,
     optionValueIds,
+    facetFilters,
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
   // One batched request for real review ratings across the whole grid (no per-card N+1).
   const ratings = await getReviewAggregates(products.map((p) => p.id))
+
+  // Empty state when the active brand/price facets (or option filters) match nothing in
+  // this window — keeps the grid honest instead of rendering a blank list.
+  if (!products.length) {
+    return (
+      <div
+        className="w-full rounded-large border border-black/5 bg-aquora-surface p-8 text-center"
+        data-testid="no-products-message"
+      >
+        <p className="font-heading text-lg text-aquora-ink mb-1">
+          No products match these filters.
+        </p>
+        <p className="text-sm text-aquora-muted">
+          Try a wider price range or clearing a brand to see more.
+        </p>
+      </div>
+    )
+  }
 
   // GA4 list context: category > collection > generic store grid.
   const listName = categoryId
