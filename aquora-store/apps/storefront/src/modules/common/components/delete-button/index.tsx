@@ -7,10 +7,16 @@ const DeleteButton = ({
   id,
   children,
   className,
+  onRemoving,
+  onRemoveError,
 }: {
   id: string
   children?: React.ReactNode
   className?: string
+  // Optimistic removal: fired the instant delete is tapped so the parent row can
+  // collapse/fade before the server round-trip; onRemoveError reverts it on failure.
+  onRemoving?: () => void
+  onRemoveError?: () => void
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -18,9 +24,11 @@ const DeleteButton = ({
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
     setError(null)
+    onRemoving?.()
     await deleteLineItem(id).catch((_err) => {
       setIsDeleting(false)
       setError("Couldn't remove this — please try again.")
+      onRemoveError?.()
     })
   }
 
