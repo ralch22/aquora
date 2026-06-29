@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
+import { buildAlternates } from "@lib/util/seo"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
 
@@ -98,9 +99,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const overview = ((product.metadata as any)?.overview as string | undefined) || product.description || product.title
   const metaDescription = overview.replace(/\s+/g, " ").trim().slice(0, 160)
 
+  const alternates = await buildAlternates(params.countryCode, `products/${handle}`)
+
   return {
     title: `${product.title} | Aquora`,
     description: metaDescription,
+    alternates,
     openGraph: {
       title: `${product.title} | Aquora`,
       description: metaDescription,

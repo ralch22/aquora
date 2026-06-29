@@ -2,10 +2,19 @@ import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ImageBanner from "@modules/common/components/image-banner"
 import { brands } from "@lib/aquora/brands"
+import { buildAlternates } from "@lib/util/seo"
 
-export const metadata: Metadata = {
-  title: "Brands — Aquora",
-  description: "Shop genuine pool, spa, pond and fountain equipment by brand at Aquora.",
+type Props = {
+  params: Promise<{ countryCode: string }>
+}
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { countryCode } = await props.params
+  return {
+    title: "Brands — Aquora",
+    description: "Shop genuine pool, spa, pond and fountain equipment by brand at Aquora.",
+    alternates: await buildAlternates(countryCode, "brands"),
+  }
 }
 
 export default function BrandsPage() {

@@ -7,6 +7,7 @@ import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { parseOptionValueIds } from "@lib/util/product-option-filters"
+import { buildAlternates } from "@lib/util/seo"
 
 type Props = {
   params: Promise<{ handle: string; countryCode: string }>
@@ -71,6 +72,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const metadata = {
     title: `${collection.title} | Aquora`,
     description: `${collection.title} collection`,
+    alternates: await buildAlternates(
+      params.countryCode,
+      `collections/${params.handle}`
+    ),
   } as Metadata
 
   return metadata
