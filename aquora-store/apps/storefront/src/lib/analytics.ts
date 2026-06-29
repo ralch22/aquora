@@ -73,3 +73,21 @@ export function trackPurchase(p: { id: string; value?: number; items?: Item[] })
     items: (p.items || []).map(toItem),
   })
 }
+
+// A/B test harness → GA4. Fires an `experiment_impression` event (so the assignment is
+// visible per-hit) AND sets a user-scoped property `experiment_<id>` (so conversions can be
+// segmented by variant in GA4 long after the impression). Both flow through the shared
+// dataLayer/gtag queue like every other event. No-op on the server.
+export function trackExperimentImpression(experimentId: string, variantId: string) {
+  if (typeof window === "undefined") return
+  emit("experiment_impression", undefined, {
+    experiment_id: experimentId,
+    variant_id: variantId,
+  })
+  // user_property → durable segmentation dimension for downstream conversions.
+  ;(window.dataLayer = window.dataLayer || []).push([
+    "set",
+    "user_properties",
+    { [`experiment_${experimentId}`]: variantId },
+  ] as unknown as Record<string, unknown>)
+}

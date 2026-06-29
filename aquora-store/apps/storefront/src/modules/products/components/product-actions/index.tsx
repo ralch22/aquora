@@ -3,6 +3,7 @@
 import { addToCart } from "@lib/data/cart"
 import { trackAddToCart, trackViewItem } from "@lib/analytics"
 import { trackRetailEvent, recordRecentlyViewed } from "@lib/aquora/retail-track"
+import { useVariant } from "@modules/analytics/experiments-provider"
 import { useIntersection } from "@lib/hooks/use-in-view"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
@@ -44,6 +45,9 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  // A/B example: bucket the add-to-cart CTA copy. Renders inline (no Suspense); SSR-stable.
+  const ctaVariant = useVariant("pdp_add_to_cart_cta")
+  const addToCartLabel = ctaVariant === "concise" ? "Add to bag" : "Add to cart"
   const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
 
@@ -357,7 +361,7 @@ export default function ProductActions({
             ? "Select a model"
             : !inStock || !isValidVariant
             ? "Out of stock"
-            : "Add to cart"}
+            : addToCartLabel}
         </Button>
 
         {selectedVariant && inStock && (
@@ -401,6 +405,7 @@ export default function ProductActions({
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
+          addToCartLabel={addToCartLabel}
         />
       </div>
     </>
