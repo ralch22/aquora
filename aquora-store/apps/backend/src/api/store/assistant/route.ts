@@ -49,6 +49,7 @@ const TOOLS = [
           type: "object",
           properties: {
             query: { type: "string", description: "Key product nouns, e.g. 'variable speed pump'" },
+            category: { type: "string", description: "Optional catalogue category name to scope the search, e.g. 'Pool Pumps', 'Pool heaters', 'Pool chlorinators'. Only set it when the request is clearly about one category." },
             max_price: { type: "number", description: "Optional AED price ceiling" },
           },
           required: ["query"],
@@ -152,9 +153,17 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   // ---- Tools (all READ-ONLY; the agent never mutates the cart or places orders) ----
-  async function searchProducts(qstr: string, maxPrice?: number): Promise<Card[]> {
-    const filter = maxPrice && maxPrice > 0 ? `price < ${Math.round(Number(maxPrice))}` : undefined;
-    const r = await retailSearch(qstr, { visitorId, pageSize: 8, filter });
+  async function searchProducts(qstr: string, maxPrice?: number, category?: string): Promise<Card[]> {
+    const priceClause = maxPrice && maxPrice > 0 ? `price < ${Math.round(Number(maxPrice))}` : "";
+    // Category is model-supplied -> sanitize before it reaches the Retail filter literal.
+    const cat = category ? sanitizeFacet(category) : "";
+    const catClause = cat ? `categories: ANY("${cat}")` : "";
+    const filter = [priceClause, catClause].filter(Boolean).join(" AND ") || undefined;
+    let r = await retailSearch(qstr, { visitorId, pageSize: 8, filter });
+    // A mis-named category must never bury results: if scoping returned nothing, retry without it.
+    if (catClause && r && r.ids.length === 0) {
+      r = await retailSearch(qstr, { visitorId, pageSize: 8, filter: priceClause || undefined });
+    }
     let handles: string[];
     if (r && r.ids.length) handles = r.ids.slice(0, 6);          // Retail = the agent's product brain
     else if (r === null) handles = await medusaSearchHandles(qstr); // Retail down -> Medusa fallback
@@ -246,7 +255,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     if (name === "search_products") {
       const q = sanitizeQuery(args?.query) || message;
       if (q) searchQueries.push(q);
-      return (await searchProducts(q, Number(args?.max_price) || undefined)).map(slim);
+      return (await searchProducts(q, Number(args?.max_price) || undefined, args?.category)).map(slim);
     }
     if (name === "get_product") return await getProductTool(args?.handle);
     if (name === "recommend_complementary") return (await recommendComplementary(args?.handle)).map(slim);

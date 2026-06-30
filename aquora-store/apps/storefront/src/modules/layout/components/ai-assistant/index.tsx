@@ -757,6 +757,11 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
                           >
                             {s.title}
                           </a>
+                          {s.category && (
+                            <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-aquora-muted">
+                              {s.category}
+                            </span>
+                          )}
                           <div className="mt-0.5 flex items-center gap-2">
                             {s.price != null && (
                               <span className="text-xs font-bold text-aquora-ink">
