@@ -29,7 +29,7 @@ export default function BrandsPage() {
       <p className="text-aquora-muted mb-10 max-w-2xl">
         Genuine equipment from {brands.length}+ leading pool, spa and water-feature manufacturers — supplied, installed and supported across the UAE &amp; the GCC.
       </p>
-      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4">
+      <ul className="aq-grid-in grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-4">
         {brands.map((b) => {
           const logo = brandLogo(b.name)
           return (

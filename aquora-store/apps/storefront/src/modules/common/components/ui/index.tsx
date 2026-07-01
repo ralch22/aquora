@@ -184,7 +184,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          "inline-flex items-center justify-center rounded-lg p-2 text-aquora-ink hover:bg-aquora-surface hover:text-aquora-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aquora-primary/40",
+          "inline-flex items-center justify-center rounded-lg p-2 text-aquora-ink hover:bg-aquora-surface hover:text-aquora-primary transition-[color,background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aquora-primary/40",
           className
         )}
         {...props}

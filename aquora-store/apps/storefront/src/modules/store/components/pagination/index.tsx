@@ -35,7 +35,7 @@ export function Pagination({
   ) => (
     <button
       key={p}
-      className={clx("txt-xlarge-plus text-aquora-muted", {
+      className={clx("txt-xlarge-plus text-aquora-muted transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:hover:translate-y-0 disabled:active:scale-100", {
         "text-aquora-ink hover:text-aquora-muted": isCurrent,
       })}
       disabled={isCurrent}

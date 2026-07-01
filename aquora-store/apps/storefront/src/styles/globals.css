@@ -22,6 +22,10 @@
 @keyframes aq-marquee {
   to { transform: translateX(-50%); }
 }
+@keyframes aq-step-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes aq-row-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes aq-err-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes aq-bar-up { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
 
 /* On-load reveal (above the fold). Ends visible via `forwards`. */
 .aq-reveal { opacity: 0; animation: aq-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--aq-d, 0ms); }
@@ -30,6 +34,17 @@
 /* Seamless logo marquee — the track holds the set twice, so translateX(-50%) is one set. */
 .aq-marquee-track { animation: aq-marquee var(--aq-marquee-dur, 42s) linear infinite; }
 .aq-marquee-pause:hover .aq-marquee-track { animation-play-state: paused; }
+/* Skeleton shimmer sweep (activates the aq-shimmer keyframe). */
+.aq-shimmer { position: relative; overflow: hidden; }
+.aq-shimmer::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent); animation: aq-shimmer 1.6s cubic-bezier(0.16,1,0.3,1) infinite; }
+/* Staggered fade-up cascade for server-rendered grids (reuses aq-fade-up). */
+.aq-grid-in > * { opacity: 0; animation: aq-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.aq-grid-in > *:nth-child(1){animation-delay:0ms} .aq-grid-in > *:nth-child(2){animation-delay:40ms} .aq-grid-in > *:nth-child(3){animation-delay:80ms} .aq-grid-in > *:nth-child(4){animation-delay:120ms} .aq-grid-in > *:nth-child(5){animation-delay:160ms} .aq-grid-in > *:nth-child(6){animation-delay:200ms} .aq-grid-in > *:nth-child(7){animation-delay:240ms} .aq-grid-in > *:nth-child(8){animation-delay:280ms} .aq-grid-in > *:nth-child(9){animation-delay:320ms} .aq-grid-in > *:nth-child(10){animation-delay:360ms} .aq-grid-in > *:nth-child(11){animation-delay:400ms} .aq-grid-in > *:nth-child(n+12){animation-delay:440ms}
+/* Short enters for checkout steps, cart rows, errors, and the mobile bar. */
+.aq-step-in { animation: aq-step-in 0.32s cubic-bezier(0.16,1,0.3,1) both; }
+.aq-row-in { animation: aq-row-in 0.4s cubic-bezier(0.16,1,0.3,1) both; animation-delay: var(--aq-d, 0ms); }
+.aq-err-in { animation: aq-err-in 0.26s cubic-bezier(0.16,1,0.3,1) both; }
+.aq-bar-up { animation: aq-bar-up 0.45s cubic-bezier(0.16,1,0.3,1) both; }
 
 /* Scroll reveal (progressive enhancement): visible by default; only hidden once
    the `aq-js` class is set on <html> (inline script, before paint), then `.aq-in`
@@ -41,6 +56,9 @@
 @media (prefers-reduced-motion: reduce) {
   .aq-reveal, .aq-float, .aq-float-sm { animation: none; opacity: 1; }
   .aq-marquee-track { animation: none; }
+  .aq-shimmer::after { animation: none; }
+  .aq-grid-in > * { animation: none; opacity: 1; }
+  .aq-step-in, .aq-row-in, .aq-err-in, .aq-bar-up { animation: none; opacity: 1; transform: none; }
   .aq-js .aq-srev, .aq-js .aq-srev.aq-in { opacity: 1; transform: none; filter: none; transition: none; }
 }
 

@@ -171,7 +171,7 @@ const Facets = () => {
                     onClick={() => toggleBrand(b.name)}
                     aria-pressed={isSelected}
                     className={clsx(
-                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center gap-2 transition-colors duration-150",
+                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center gap-2 transition-[color,border-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px active:scale-[0.97] active:translate-y-0",
                       {
                         "border-aquora-primary text-aquora-ink": isSelected,
                         "text-aquora-muted hover:text-aquora-ink": !isSelected,
@@ -222,7 +222,7 @@ const Facets = () => {
                     onClick={() => setRange(r.min, r.max)}
                     aria-pressed={active}
                     className={clsx(
-                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center justify-between transition-colors duration-150",
+                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center justify-between transition-[color,border-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
                       {
                         "border-aquora-primary text-aquora-ink": active,
                         "text-aquora-muted hover:text-aquora-ink": !active,
