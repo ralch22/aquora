@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductPicks from "@modules/tools/components/product-picks"
 
 // Industry-standard target ranges + dose rates (per 1 m³ = 1000 L). Doses move the reading toward
 // the MIDDLE of the ideal range. These are guide figures — the UI makes clear to follow the label,
@@ -225,16 +226,21 @@ export default function DosingCalculator() {
           <div className="space-y-4">
             <p className="text-sm font-semibold text-aquora-ink">Recommended for a {volume} m³ pool:</p>
             {recs.map((r, i) => (
-              <div key={i} className={`flex flex-col gap-2 rounded-[1.4rem] border p-5 small:flex-row small:items-center small:justify-between ${toneClasses[r.tone]}`}>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-aquora-ink">{r.title}</p>
-                  <p className="mt-0.5 font-heading text-lg font-bold text-aquora-primary">{r.dose}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-aquora-muted">{r.note}</p>
+              <div key={i} className={`rounded-[1.4rem] border p-5 ${toneClasses[r.tone]}`}>
+                <div className="flex flex-col gap-2 small:flex-row small:items-center small:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-aquora-ink">{r.title}</p>
+                    <p className="mt-0.5 font-heading text-lg font-bold text-aquora-primary">{r.dose}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-aquora-muted">{r.note}</p>
+                  </div>
+                  <LocalizedClientLink href={r.href} className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-aquora-ink px-5 py-2.5 text-sm font-semibold text-white transition active:scale-[0.98]">
+                    {r.cta}
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5" aria-hidden><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
+                  </LocalizedClientLink>
                 </div>
-                <LocalizedClientLink href={r.href} className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-aquora-ink px-5 py-2.5 text-sm font-semibold text-white transition active:scale-[0.98]">
-                  {r.cta}
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5" aria-hidden><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" /></svg>
-                </LocalizedClientLink>
+                <div className="mt-4">
+                  <ProductPicks source={r.href} limit={1} cols={2} />
+                </div>
               </div>
             ))}
           </div>

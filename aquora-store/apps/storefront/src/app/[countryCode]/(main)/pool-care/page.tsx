@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ImageBanner from "@modules/common/components/image-banner"
+import ProductPicksServer from "@modules/tools/components/product-picks/ProductPicksServer"
 
 export const metadata: Metadata = {
   title: "Pool Care 101 — Free Tools, Guides & Troubleshooting | Aquora",
@@ -107,6 +108,11 @@ export default function PoolCarePage() {
             </span>
           </LocalizedClientLink>
         ))}
+      </div>
+
+      {/* Shop the pool-care essentials — real cards, self-hides if unstocked */}
+      <div className="mt-14">
+        <ProductPicksServer source="/search?cat=Pool chlorine" limit={4} eyebrow="Pool care" title="Shop the essentials" cols={4} />
       </div>
 
       {/* Guides / next steps */}

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ProductPicks from "@modules/tools/components/product-picks"
 
 type Product = { label: string; href: string }
 type Problem = {
@@ -212,6 +213,11 @@ export default function ProblemSolver() {
             </div>
             <div className="mt-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-aquora-muted">What you&apos;ll need</p>
+              {p.products[0] && (
+                <div className="mt-3">
+                  <ProductPicks source={p.products[0].href} limit={3} cols={3} eyebrow="Top picks" />
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap gap-2.5">
                 {p.products.map((pr) => (
                   <LocalizedClientLink key={pr.href} href={pr.href}
