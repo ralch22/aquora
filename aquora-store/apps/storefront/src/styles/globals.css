@@ -19,11 +19,17 @@
 @keyframes aq-shimmer {
   100% { transform: translateX(100%); }
 }
+@keyframes aq-marquee {
+  to { transform: translateX(-50%); }
+}
 
 /* On-load reveal (above the fold). Ends visible via `forwards`. */
 .aq-reveal { opacity: 0; animation: aq-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: var(--aq-d, 0ms); }
 .aq-float { animation: aq-float 6s ease-in-out infinite; }
 .aq-float-sm { animation: aq-float-sm 5s ease-in-out infinite; }
+/* Seamless logo marquee — the track holds the set twice, so translateX(-50%) is one set. */
+.aq-marquee-track { animation: aq-marquee var(--aq-marquee-dur, 42s) linear infinite; }
+.aq-marquee-pause:hover .aq-marquee-track { animation-play-state: paused; }
 
 /* Scroll reveal (progressive enhancement): visible by default; only hidden once
    the `aq-js` class is set on <html> (inline script, before paint), then `.aq-in`
@@ -34,6 +40,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .aq-reveal, .aq-float, .aq-float-sm { animation: none; opacity: 1; }
+  .aq-marquee-track { animation: none; }
   .aq-js .aq-srev, .aq-js .aq-srev.aq-in { opacity: 1; transform: none; filter: none; transition: none; }
 }
 

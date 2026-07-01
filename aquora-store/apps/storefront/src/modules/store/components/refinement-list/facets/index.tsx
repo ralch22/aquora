@@ -7,6 +7,7 @@ import clsx from "clsx"
 
 import { ChevronDownMini } from "@medusajs/icons"
 import { brands as allBrands } from "@lib/aquora/brands"
+import { brandLogo } from "@lib/aquora/brand-logos"
 import {
   BRAND_QUERY_KEY,
   MAX_PRICE_QUERY_KEY,
@@ -162,6 +163,7 @@ const Facets = () => {
             <div className="flex flex-wrap gap-2" data-testid="brand-facet">
               {topBrands.map((b) => {
                 const isSelected = selectedBrandSet.has(b.name)
+                const logo = brandLogo(b.name)
                 return (
                   <button
                     key={b.name}
@@ -169,13 +171,21 @@ const Facets = () => {
                     onClick={() => toggleBrand(b.name)}
                     aria-pressed={isSelected}
                     className={clsx(
-                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center transition-colors duration-150",
+                      "border-black/10 border text-small-regular h-10 rounded-lg px-3 flex items-center gap-2 transition-colors duration-150",
                       {
                         "border-aquora-primary text-aquora-ink": isSelected,
                         "text-aquora-muted hover:text-aquora-ink": !isSelected,
                       }
                     )}
                   >
+                    {logo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logo}
+                        alt=""
+                        className="h-4 w-auto max-w-[46px] shrink-0 object-contain grayscale opacity-80"
+                      />
+                    )}
                     {b.name}
                   </button>
                 )
