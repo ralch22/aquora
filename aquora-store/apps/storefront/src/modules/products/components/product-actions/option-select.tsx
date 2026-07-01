@@ -53,11 +53,11 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               onClick={() => updateOption(option.id, v)}
               key={v}
               className={clx(
-                "border-black/10 bg-aquora-surface border text-small-regular min-h-10 rounded-lg p-2 flex-1 flex flex-col items-center justify-center gap-0.5",
+                "border-black/10 bg-aquora-surface border text-small-regular min-h-10 rounded-lg p-2 flex-1 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                 {
-                  "border-aquora-primary": v === current,
-                  "hover:shadow-sm transition-shadow ease-in-out duration-150":
-                    v !== current && !isUnavailable,
+                  "border-aquora-primary scale-[1.02]": v === current,
+                  "hover:shadow-sm -translate-y-px": v !== current && !isUnavailable,
+                  "active:scale-[0.97]": !isUnavailable,
                   "opacity-40 cursor-not-allowed": isUnavailable,
                 }
               )}

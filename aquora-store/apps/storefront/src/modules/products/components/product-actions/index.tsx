@@ -323,7 +323,7 @@ export default function ProductActions({
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1 || isAdding}
                 aria-label="Decrease quantity"
-                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-black/[0.04] active:scale-90 disabled:opacity-40 disabled:active:scale-100"
               >
                 −
               </button>
@@ -335,7 +335,7 @@ export default function ProductActions({
                 onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                 disabled={quantity >= 99 || isAdding}
                 aria-label="Increase quantity"
-                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink disabled:opacity-40 hover:bg-black/[0.04] transition-colors"
+                className="h-11 w-11 grid place-items-center text-lg leading-none text-aquora-ink transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-black/[0.04] active:scale-90 disabled:opacity-40 disabled:active:scale-100"
               >
                 +
               </button>

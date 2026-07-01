@@ -121,7 +121,7 @@ export default async function PaginatedProducts({
   if (!products.length) {
     return (
       <div
-        className="w-full rounded-large border border-black/5 bg-aquora-surface p-8 text-center"
+        className="aq-reveal w-full rounded-large border border-black/5 bg-aquora-surface p-8 text-center"
         data-testid="no-products-message"
       >
         <p className="font-heading text-lg text-aquora-ink mb-1">
@@ -145,7 +145,7 @@ export default async function PaginatedProducts({
     <>
       <ProductListTracker listName={listName} items={toListItems(products)}>
         <ul
-          className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
+          className="aq-grid-in grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
           data-testid="products-list"
         >
           {products.flatMap((p, i) => {
