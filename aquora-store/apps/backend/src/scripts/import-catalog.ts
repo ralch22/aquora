@@ -186,7 +186,10 @@ export default async function importCatalog({ container }: { container: MedusaCo
         ...(p.brand ? { metadata: { brand: p.brand } } : {}),
         images,
         options: [{ title: "Type", values: ["Standard"] }],
-        variants: [{ title: "Standard", sku, manage_inventory: true, options: { Type: "Standard" }, prices: [{ amount: priceAED(p), currency_code: "aed" }] }],
+        // Made-to-order model: allow_backorder so every item is purchasable in any quantity
+        // (no live stock feed). Without this the qty selector collapses to 1 (inventory_quantity
+        // does not resolve through the query graph). A re-import must keep this true.
+        variants: [{ title: "Standard", sku, manage_inventory: true, allow_backorder: true, options: { Type: "Standard" }, prices: [{ amount: priceAED(p), currency_code: "aed" }] }],
         sales_channels: [{ id: salesChannel.id }],
       };
     });
