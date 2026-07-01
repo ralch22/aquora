@@ -65,5 +65,12 @@ export default defineMiddlewares({
       bodyParser: { sizeLimit: "16kb" },
       middlewares: [rateLimit({ key: "questions-post", windowMs: 60_000, max: 6 })],
     },
+    {
+      // Public newsletter signup — small body, tight cap to deter list-stuffing.
+      matcher: "/store/newsletter",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "8kb" },
+      middlewares: [rateLimit({ key: "newsletter", windowMs: 60_000, max: 6 })],
+    },
   ],
 });

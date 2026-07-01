@@ -4,6 +4,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import PremiumCta from "@modules/common/components/premium-cta"
 import PaymentTrustStrip from "@modules/common/components/payment-trust"
 import Reveal from "@modules/common/components/reveal"
+import NewsletterSignup from "@modules/layout/components/newsletter-signup"
 import { brand, contact, hasRealPhone, hasRealWhatsapp } from "@lib/aquora/brand"
 import { categories } from "@lib/aquora/categories"
 
@@ -70,6 +71,9 @@ export default async function Footer() {
         </div>
         </Reveal>
       </div>
+
+      {/* Newsletter capture (owned list) */}
+      <NewsletterSignup />
 
       <div className="content-container flex flex-col w-full border-t border-black/5">
         {/* Brand row */}
