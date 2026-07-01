@@ -22,7 +22,7 @@ const EditorialSections = () => {
               >
                 {/* Visual panel — real brand photography with a teal wash */}
                 <div
-                  className={`relative aspect-[4/3] overflow-hidden rounded-large bg-aquora-secondary ${
+                  className={`group relative aspect-[4/3] overflow-hidden rounded-large bg-aquora-secondary ${
                     reversed ? "small:order-2" : ""
                   }`}
                 >
@@ -31,7 +31,7 @@ const EditorialSections = () => {
                     alt={section.heading}
                     fill
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-aquora-secondary/65 via-transparent to-transparent" />
                   <span className="absolute bottom-5 left-6 font-heading text-7xl font-extrabold text-white/25">

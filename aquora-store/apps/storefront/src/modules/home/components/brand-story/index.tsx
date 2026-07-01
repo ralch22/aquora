@@ -23,17 +23,17 @@ const BrandStory = () => {
         {/* Image */}
         <div className="relative order-2 lg:order-1">
           <div className="rounded-[2rem] border border-black/5 bg-aquora-surface p-2">
-            <div className="overflow-hidden rounded-[1.6rem]">
+            <div className="group overflow-hidden rounded-[1.6rem]">
               <Image
                 src="/images/brand/story.webp"
                 alt="A finished luxury swimming pool at a Dubai villa at dusk"
                 width={1200}
                 height={800}
-                className="aspect-[3/2] h-full w-full object-cover"
+                className="aspect-[3/2] h-full w-full object-cover transition-transform duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
               />
             </div>
           </div>
-          <div className="absolute -right-3 -top-5 hidden rounded-2xl border border-white/15 bg-aquora-secondary px-4 py-3 text-white shadow-xl small:block">
+          <div className="aq-float absolute -right-3 -top-5 hidden rounded-2xl border border-white/15 bg-aquora-secondary px-4 py-3 text-white shadow-xl small:block">
             <p className="text-[10px] uppercase tracking-wide text-aquora-accent">Built around</p>
             <p className="text-sm font-bold">Gulf water & climate</p>
           </div>

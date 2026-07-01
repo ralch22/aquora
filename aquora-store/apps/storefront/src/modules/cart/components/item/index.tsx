@@ -84,7 +84,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   return (
     <Table.Row
       className={clx(
-        "w-full transition-all duration-300 ease-out",
+        "w-full aq-row-in transition-all duration-300 ease-out",
         removing && "opacity-0 -translate-y-1 pointer-events-none"
       )}
       data-testid="product-row"

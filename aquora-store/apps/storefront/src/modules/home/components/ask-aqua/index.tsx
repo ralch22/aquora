@@ -10,7 +10,7 @@ const AskAqua = () => {
           <path d="M0 280 C 200 220 400 320 600 270 S 1000 220 1200 270" stroke="currentColor" strokeWidth="1.5" />
           <path d="M0 320 C 200 260 400 360 600 310 S 1000 260 1200 310" stroke="currentColor" strokeWidth="1.5" />
         </svg>
-        <div className="absolute right-8 top-8 hidden h-32 w-32 rounded-full bg-aquora-accent/15 blur-[60px] small:block" />
+        <div className="aq-float-sm absolute right-8 top-8 hidden h-32 w-32 rounded-full bg-aquora-accent/15 blur-[60px] small:block" />
 
         <div className="relative grid items-center gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div>
@@ -32,7 +32,7 @@ const AskAqua = () => {
           </div>
 
           {/* Mock chat card */}
-          <div className="hidden lg:block">
+          <div className="aq-float hidden lg:block">
             <div className="rounded-[1.75rem] border border-white/12 bg-white/[0.08] p-4 backdrop-blur-md">
               <div className="space-y-3">
                 <div className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-white/90 px-4 py-2.5 text-sm text-aquora-ink">
