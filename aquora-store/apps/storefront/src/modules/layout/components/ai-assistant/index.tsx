@@ -37,6 +37,7 @@ type AssistantResponse = {
   cta?: { type?: string } | null
   ai?: boolean
   transcript?: string
+  conversationId?: string
 }
 
 const GREETING: Message = {
@@ -147,6 +148,7 @@ type StoredChat = {
   v: 1
   messages: StoredMessage[]
   history: { role: "user" | "model"; parts: { text: string }[] }[]
+  conversationId?: string
 }
 
 // Light PII redaction for anything written to localStorage: never persist emails or
@@ -298,6 +300,9 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
   // Multi-turn memory (Gemini Content[], text-only) + a stable visitor id for Retail.
   const historyRef = useRef<{ role: "user" | "model"; parts: { text: string }[] }[]>([])
   const vidRef = useRef<string>("")
+  // Server-issued conversation id — echoed on every turn so the backend groups the whole
+  // conversation into one transcript (Phase 3 insights). Survives reload via localStorage.
+  const convIdRef = useRef<string>("")
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const speakGenRef = useRef(0)
   // Gate persistence until after the initial rehydrate, so the empty greeting-only state
@@ -318,6 +323,9 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
         }
         if (parsed && Array.isArray(parsed.history)) {
           historyRef.current = parsed.history.slice(-MAX_STORED_TURNS)
+        }
+        if (parsed && typeof parsed.conversationId === "string") {
+          convIdRef.current = parsed.conversationId
         }
       }
     } catch {}
@@ -352,6 +360,7 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
         history: historyRef.current
           .slice(-MAX_STORED_TURNS)
           .map((h) => ({ role: h.role, parts: [{ text: redactForStorage(h.parts[0]?.text || "") }] })),
+        ...(convIdRef.current ? { conversationId: convIdRef.current } : {}),
       }
       localStorage.setItem(chatKey(vid), JSON.stringify(payload))
     } catch {}
@@ -482,6 +491,7 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
       history: historyRef.current.slice(-12),
       cart: cartItems || [],
       ...(vidRef.current ? { v: vidRef.current } : {}),
+      ...(convIdRef.current ? { conversationId: convIdRef.current } : {}),
     }
     const res = await fetchWithTimeout(
       `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/assistant`,
@@ -500,6 +510,7 @@ const AiAssistant = ({ cartItems = [] }: { cartItems?: CartItem[] }) => {
   }
 
   const appendAssistant = (data: AssistantResponse) => {
+    if (data.conversationId) convIdRef.current = data.conversationId
     const text = data.reply || "I'm here to help with Aquora equipment — could you rephrase that?"
     setMessages((prev) => [
       ...prev,
