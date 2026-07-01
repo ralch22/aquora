@@ -6,6 +6,8 @@ import { retailPredict, retailSearch, writeUserEvent } from "../../../lib/retail
 import { hydrateProducts, type Card } from "../../../lib/product-lookup";
 import { COMPLEMENTARY } from "../../../lib/complementary";
 import { lookupOrderStatus } from "../../../lib/order-status";
+import { ASSISTANT_MODULE } from "../../../modules/assistant";
+import { randomUUID } from "crypto";
 
 const PROJECT = process.env.GCP_PROJECT || "emerge-digital-web-7034";
 const LOCATION = process.env.GCP_LOCATION || "global";
@@ -110,6 +112,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     history?: any[];
     cart?: { title?: string; variant_id?: string; handle?: string }[];
     v?: string;
+    conversationId?: string;
   };
   const message = (body.message || "").toString().trim();
   const imageBase64 = (body.imageBase64 || "").toString().replace(/^data:[^,]+,/, "");
@@ -124,6 +127,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const productService = req.scope.resolve(Modules.PRODUCT);
   const graph = req.scope.resolve(ContainerRegistrationKeys.QUERY);
   const visitorId = (body.v || "anon").toString().slice(0, 64);
+  // Server-issued conversation id groups turns into a transcript; the widget echoes it back.
+  const conversationId = (body.conversationId || "").toString().slice(0, 64) || randomUUID();
+  // Logged-in customer (nullable) — store auth exposes the customer id as auth_context.actor_id.
+  const customerId = ((req as any).auth_context?.actor_id as string) || null;
 
   // Region (once) for AED price resolution in hydrateProducts.
   let regionId: string | undefined;
@@ -309,7 +316,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   let effectiveMessage = message;
   if (!effectiveMessage && audioBase64) {
     effectiveMessage = await transcribeAudio(audioBase64, audioMimeType);
-    if (!effectiveMessage) { res.json({ reply: "I didn't quite catch that — could you try again, or type your question?", suggestions: [], cta: null, ai: false, transcript: "" }); return; }
+    if (!effectiveMessage) { res.json({ reply: "I didn't quite catch that — could you try again, or type your question?", suggestions: [], cta: null, ai: false, transcript: "", conversationId }); return; }
   }
 
   // ---- Agentic loop: Gemini function-calling grounded on the tools above ----
@@ -331,6 +338,29 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logSession = (extra: Record<string, any>) => {
     try {
       console.log(JSON.stringify({ type: "aqua_session", at: new Date().toISOString(), visitorId, hadImage: !!imageBase64, hadAudio: !!audioBase64, query: maskPII((effectiveMessage || "").slice(0, 200)), toolsUsed, ...extra }));
+    } catch {}
+  };
+  // Phase 3: persist the full turn to Postgres (transcript + assisted-conversion attribution).
+  // FIRE-AND-FORGET — resolved lazily, wrapped, never awaited: recording can never block or
+  // break the shopper reply. Content is PII-masked; suggestions are trimmed to the essentials.
+  const persistSession = (extra: { reply?: string; suggestions?: any[]; cta?: string | null; ai: boolean }) => {
+    try {
+      const svc: any = req.scope.resolve(ASSISTANT_MODULE);
+      void svc
+        .createAssistantSessions({
+          conversation_id: conversationId,
+          visitor_id: visitorId,
+          customer_id: customerId,
+          message: maskPII((effectiveMessage || "").slice(0, 2000)) || null,
+          reply: (extra.reply || "").slice(0, 4000) || null,
+          tools_used: toolsUsed,
+          suggestions: (extra.suggestions || []).map((s) => ({ handle: s.handle, title: s.title, price: s.price, variant_id: s.variant_id })),
+          cta: extra.cta || null,
+          had_image: !!imageBase64,
+          had_audio: !!audioBase64,
+          ai: extra.ai,
+        })
+        .catch(() => {});
     } catch {}
   };
 
@@ -381,12 +411,15 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const suggestions = buildSuggestions(reply);
     emitRetailUserEvents(suggestions.map((s) => s.handle));
     logSession({ ai: true, cta: cta?.type || null, nSuggestions: suggestions.length });
-    res.json({ reply, suggestions, cta, ai: true, transcript: effectiveMessage });
+    res.json({ reply, suggestions, cta, ai: true, transcript: effectiveMessage, conversationId });
+    persistSession({ reply, suggestions, cta: cta?.type || null, ai: true });
   } catch (e: any) {
     logSession({ ai: false, error: String(e?.message || e).slice(0, 120) });
+    const errSuggestions = buildSuggestions("");
     res.json({
       reply: cardIndex.size ? "Here are some Aquora products that match. For a tailored specification, request a free consultation." : "Our advisor is briefly unavailable — please try again or request a free consultation.",
-      suggestions: buildSuggestions(""), cta: null, ai: false, transcript: effectiveMessage, error: String(e?.message || e).slice(0, 120),
+      suggestions: errSuggestions, cta: null, ai: false, transcript: effectiveMessage, error: String(e?.message || e).slice(0, 120), conversationId,
     });
+    persistSession({ reply: undefined, suggestions: errSuggestions, cta: null, ai: false });
   }
 }

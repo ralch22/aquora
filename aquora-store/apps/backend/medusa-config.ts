@@ -33,6 +33,10 @@ modules.push({ resolve: './src/modules/review' })
 // Custom product Q&A module (owner-answered, moderation-first).
 modules.push({ resolve: './src/modules/qa' })
 
+// Ask-Aqua conversation persistence (Phase 3 insights) — records every assistant turn
+// fire-and-forget for transcripts + assisted-conversion attribution.
+modules.push({ resolve: './src/modules/assistant' })
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
