@@ -188,7 +188,7 @@ export default async function BrandPage(props: Props) {
         <>
           {/* Inline grid — NOT wrapped in a streamed <Suspense> (deferred-suspense bug keeps
               funnel-critical grids hidden in this deploy). */}
-          <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8" data-testid="brand-products-list">
+          <ul className="aq-grid-in grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8" data-testid="brand-products-list">
             {products.map((p) => (
               <li key={p.handle}>
                 <LocalizedClientLink href={`/products/${p.handle}`} className="group block">

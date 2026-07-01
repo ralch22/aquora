@@ -13,7 +13,7 @@ export default function KeyFeatures({ product }: { product: HttpTypes.StoreProdu
       </h3>
       <ul className="mt-4 grid grid-cols-1 gap-x-6 gap-y-3">
         {features.slice(0, 6).map((f, i) => (
-          <li key={i} className="flex items-start gap-2.5 text-sm leading-snug text-aquora-ink">
+          <li key={i} className="aq-reveal flex items-start gap-2.5 text-sm leading-snug text-aquora-ink" style={{ ["--aq-d" as any]: `${i * 70}ms` }}>
             <svg
               className="mt-0.5 h-4 w-4 shrink-0 text-aquora-accentdark"
               viewBox="0 0 16 16"

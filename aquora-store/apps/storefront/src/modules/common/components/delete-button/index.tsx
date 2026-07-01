@@ -40,7 +40,7 @@ const DeleteButton = ({
       )}
     >
       <button
-        className="flex gap-x-1 text-aquora-muted hover:text-aquora-ink cursor-pointer disabled:opacity-60"
+        className="flex gap-x-1 text-aquora-muted hover:text-aquora-ink cursor-pointer disabled:opacity-60 transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90"
         onClick={() => handleDelete(id)}
         disabled={isDeleting}
       >

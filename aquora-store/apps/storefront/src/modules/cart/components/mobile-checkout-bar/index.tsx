@@ -20,7 +20,7 @@ export default function MobileCheckoutBar({ cart }: { cart: HttpTypes.StoreCart 
   const count = cart?.items?.reduce((a, i) => a + i.quantity, 0) ?? 0
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 backdrop-blur-xl shadow-[0_-10px_30px_-16px_rgba(11,31,36,0.25)] small:hidden">
+    <div className="aq-bar-up fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/95 backdrop-blur-xl shadow-[0_-10px_30px_-16px_rgba(11,31,36,0.25)] small:hidden">
       <div className="content-container flex items-center justify-between gap-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <div className="min-w-0">
           <span className="block text-[11px] leading-tight text-aquora-muted">

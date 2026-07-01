@@ -276,7 +276,7 @@ export default async function SearchPage(props: {
                   <LocalizedClientLink
                     key={c.label}
                     href={c.href}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium bg-aquora-primary/10 text-aquora-primary rounded-full pl-3 pr-2 py-1 hover:bg-aquora-primary/20 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium bg-aquora-primary/10 text-aquora-primary rounded-full pl-3 pr-2 py-1 hover:bg-aquora-primary/20 transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px active:scale-[0.96]"
                   >
                     {c.label}
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -304,7 +304,7 @@ export default async function SearchPage(props: {
                   }))}
                 as="div"
               >
-              <ul className="grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-10">
+              <ul className="aq-grid-in grid grid-cols-2 small:grid-cols-3 gap-x-6 gap-y-10">
                 {products.map((p) => (
                   <li key={p.handle}>
                     <LocalizedClientLink href={`/products/${p.handle}`} className="group block">
@@ -333,7 +333,7 @@ export default async function SearchPage(props: {
               </ul>
               </ProductListTracker>
             ) : (
-              <div className="rounded-large border border-black/5 bg-aquora-surface p-8 text-center">
+              <div className="aq-reveal rounded-large border border-black/5 bg-aquora-surface p-8 text-center">
                 <p className="text-aquora-ink font-heading text-lg mb-1">No matches{hasFilters ? " with these filters" : ` for “${state.q}”`}.</p>
                 <p className="text-aquora-muted text-sm">
                   {hasFilters ? (
@@ -349,7 +349,7 @@ export default async function SearchPage(props: {
             {totalPages > 1 && (
               <nav className="flex items-center justify-center gap-2 mt-12" aria-label="Search results pages">
                 {state.page > 1 && (
-                  <LocalizedClientLink href={makeHref({ ...state, page: state.page - 1 })} className="px-3 py-2 text-sm rounded-md border border-black/10 text-aquora-ink hover:border-aquora-primary hover:text-aquora-primary transition-colors">
+                  <LocalizedClientLink href={makeHref({ ...state, page: state.page - 1 })} className="px-3 py-2 text-sm rounded-md border border-black/10 text-aquora-ink hover:border-aquora-primary hover:text-aquora-primary transition-[color,border-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]">
                     ← Prev
                   </LocalizedClientLink>
                 )}
@@ -357,7 +357,7 @@ export default async function SearchPage(props: {
                   Page {state.page} of {totalPages}
                 </span>
                 {state.page < totalPages && (
-                  <LocalizedClientLink href={makeHref({ ...state, page: state.page + 1 })} className="px-3 py-2 text-sm rounded-md border border-black/10 text-aquora-ink hover:border-aquora-primary hover:text-aquora-primary transition-colors">
+                  <LocalizedClientLink href={makeHref({ ...state, page: state.page + 1 })} className="px-3 py-2 text-sm rounded-md border border-black/10 text-aquora-ink hover:border-aquora-primary hover:text-aquora-primary transition-[color,border-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]">
                     Next →
                   </LocalizedClientLink>
                 )}
