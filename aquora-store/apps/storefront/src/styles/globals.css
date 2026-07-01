@@ -60,6 +60,7 @@
   .aq-grid-in > * { animation: none; opacity: 1; }
   .aq-step-in, .aq-row-in, .aq-err-in, .aq-bar-up { animation: none; opacity: 1; transform: none; }
   .aq-js .aq-srev, .aq-js .aq-srev.aq-in { opacity: 1; transform: none; filter: none; transition: none; }
+  .aq-slidein { transform: none !important; }
 }
 
 @layer base {

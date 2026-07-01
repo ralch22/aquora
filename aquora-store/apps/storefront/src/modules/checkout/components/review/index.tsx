@@ -37,7 +37,7 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
         </Heading>
       </div>
       {isOpen && previousStepsCompleted && (
-        <>
+        <div className="aq-step-in">
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
               <Text className="txt-medium-plus text-aquora-ink mb-1">
@@ -68,7 +68,7 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
             </p>
           )}
           <PaymentButton cart={cart} data-testid="submit-order-button" />
-        </>
+        </div>
       )}
     </div>
   )

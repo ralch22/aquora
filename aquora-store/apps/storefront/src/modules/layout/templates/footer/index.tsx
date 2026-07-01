@@ -3,6 +3,7 @@ import { Text } from "@modules/common/components/ui";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import PremiumCta from "@modules/common/components/premium-cta"
 import PaymentTrustStrip from "@modules/common/components/payment-trust"
+import Reveal from "@modules/common/components/reveal"
 import { brand, contact, hasRealPhone, hasRealWhatsapp } from "@lib/aquora/brand"
 import { categories } from "@lib/aquora/categories"
 
@@ -44,6 +45,7 @@ export default async function Footer() {
           <path d="M0 180 C 320 120 640 220 960 170 S 1280 120 1440 170" stroke="currentColor" strokeWidth="1.5" />
           <path d="M0 220 C 320 160 640 260 960 210 S 1280 160 1440 210" stroke="currentColor" strokeWidth="1.5" />
         </svg>
+        <Reveal>
         <div className="content-container relative flex flex-col items-start gap-8 py-16 small:flex-row small:items-center small:justify-between small:py-20">
           <div className="max-w-xl">
             <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-aquora-accent">
@@ -66,6 +68,7 @@ export default async function Footer() {
             </PremiumCta>
           </div>
         </div>
+        </Reveal>
       </div>
 
       <div className="content-container flex flex-col w-full border-t border-black/5">

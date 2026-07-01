@@ -67,7 +67,7 @@ const Addresses = ({
       </div>
       {isOpen ? (
         <form action={formAction}>
-          <div className="pb-8">
+          <div className="pb-8 aq-step-in">
             <ShippingAddress
               customer={customer}
               checked={sameAsBilling}

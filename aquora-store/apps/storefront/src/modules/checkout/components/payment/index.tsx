@@ -146,7 +146,7 @@ const Payment = ({
         )}
       </div>
       <div>
-        <div className={isOpen ? "block" : "hidden"}>
+        <div className={isOpen ? "block aq-step-in" : "hidden"}>
           {/* Apple Pay / Google Pay one-click. Mount-gated on `isOpen` so it only mounts on
               the payment step, and it carries its OWN isolated <Elements> provider, so it
               can never affect the card path or white-screen checkout (see express-checkout). */}
