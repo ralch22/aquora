@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getGuide, listGuides } from "@lib/aquora/guides"
+import ProductPicksServer from "@modules/tools/components/product-picks/ProductPicksServer"
 
 type Props = { params: Promise<{ slug: string; countryCode: string }> }
 
@@ -89,7 +90,14 @@ export default async function GuidePage(props: Props) {
         {/* What you'll need */}
         <div className="mt-8 rounded-[1.5rem] border border-black/[0.06] bg-aquora-surface/50 p-6">
           <h2 className="font-heading text-lg font-bold text-aquora-ink">What you&apos;ll need</h2>
-          <div className="mt-4 flex flex-wrap gap-2.5">
+          {/* Real products for each item — self-hides per category when nothing is stocked. */}
+          <div className="mt-5 flex flex-col gap-7">
+            {g.whatYouNeed.map((p) => (
+              <ProductPicksServer key={`picks-${p.href}`} source={p.href} limit={2} title={p.label} cols={2} />
+            ))}
+          </div>
+          {/* Browse-all links — always present as the fallback. */}
+          <div className="mt-6 flex flex-wrap gap-2.5">
             {g.whatYouNeed.map((p) => (
               <LocalizedClientLink key={p.href} href={p.href}
                 className="group inline-flex items-center gap-1.5 rounded-full border border-aquora-primary/30 bg-white px-4 py-2 text-sm font-semibold text-aquora-primary transition hover:bg-aquora-primary hover:text-white">
