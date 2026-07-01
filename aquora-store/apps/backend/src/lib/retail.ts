@@ -153,17 +153,21 @@ export async function writeUserEvent(eventType: RetailEventType, opts: RetailEve
 // Retail Recommendations Predict: returns ordered product ids for a recommendation panel, or
 // null if no rec serving config is provisioned / the model isn't ready (caller falls back to a
 // content heuristic). `contextHandle` seeds item-based panels (e.g. "others you may like").
-export async function retailPredict(opts: { visitorId: string; eventType?: "home-page-view" | "detail-page-view"; contextHandle?: string; pageSize?: number }): Promise<string[] | null> {
-  if (!REC_SERVING) return null; // not provisioned yet
+export async function retailPredict(opts: { visitorId: string; eventType?: "home-page-view" | "detail-page-view"; contextHandle?: string; pageSize?: number; servingConfigId?: string; filter?: string }): Promise<string[] | null> {
+  // Per-surface serving config (home / PDP / cart models) overrides the shared default.
+  const servingConfig = opts.servingConfigId || REC_SERVING;
+  if (!servingConfig) return null; // not provisioned yet
   try {
     const token = await getAccessToken();
     const userEvent: any = { eventType: opts.eventType || "home-page-view", visitorId: opts.visitorId || "anon" };
     if (opts.contextHandle) userEvent.productDetails = [{ product: { id: opts.contextHandle } }];
-    const placement = `projects/${PROJECT}/locations/global/catalogs/${CATALOG}/servingConfigs/${REC_SERVING}`;
+    const placement = `projects/${PROJECT}/locations/global/catalogs/${CATALOG}/servingConfigs/${servingConfig}`;
+    const body: any = { userEvent, pageSize: opts.pageSize ?? 10, params: { returnProduct: false } };
+    if (opts.filter) body.filter = opts.filter; // e.g. in-stock / category scoping (mirrors retailSearch)
     const r = await timedFetch(`https://retail.googleapis.com/v2/${placement}:predict`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "x-goog-user-project": PROJECT },
-      body: JSON.stringify({ userEvent, pageSize: opts.pageSize ?? 10, params: { returnProduct: false } }),
+      body: JSON.stringify(body),
     }, 5000);
     if (!r.ok) {
       let msg = ""; try { msg = (await r.json())?.error?.message || ""; } catch {}

@@ -2,7 +2,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import { visualSearch } from "../../../lib/vision-search";
 import { getAccessToken } from "../../../lib/gcp-token";
-import { retailSearch, writeUserEvent } from "../../../lib/retail";
+import { retailPredict, retailSearch, writeUserEvent } from "../../../lib/retail";
 import { hydrateProducts, type Card } from "../../../lib/product-lookup";
 import { COMPLEMENTARY } from "../../../lib/complementary";
 import { lookupOrderStatus } from "../../../lib/order-status";
@@ -19,6 +19,7 @@ Tools:
 - search_products: find catalogue items by the key product nouns (e.g. "variable speed pump", "sand filter", "LED light"). ALWAYS search before saying something isn't available — the catalogue has ~6,000 items. Pass max_price to cap the budget.
 - get_product: get accurate price, stock and details for one product by its handle before recommending it specifically or comparing.
 - recommend_complementary: given a product handle, get items frequently used with it (e.g. a filter for a pump) to cross-sell.
+- recommend_for_you: personalised picks for this shopper from their history. Use for open-ended "what do you recommend / what's popular" asks; if it returns nothing, fall back to search_products.
 - visual_search: when the customer attaches a photo, identify the equipment and call search_products with keywords; you may also call visual_search.
 
 Support: you also help after the sale.
@@ -66,6 +67,12 @@ const TOOLS = [
         description:
           "Given a product handle the customer is interested in, return products frequently used together (e.g. a filter for a pump). Use to cross-sell.",
         parameters: { type: "object", properties: { handle: { type: "string" } }, required: ["handle"] },
+      },
+      {
+        name: "recommend_for_you",
+        description:
+          "Return products personalised for THIS shopper from Google Retail Recommendations (their browsing + purchase history). Use for open-ended asks like 'what do you recommend' or 'what's popular' when there's no specific product in mind. Returns an empty list when no personalised recommendations exist yet — then use search_products instead.",
+        parameters: { type: "object", properties: {}, required: [] },
       },
       {
         name: "visual_search",
@@ -200,6 +207,16 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return register(await hydrateProducts(graph, handles.slice(0, 6), regionId));
     } catch { return []; }
   }
+  async function recommendForYou(): Promise<Card[]> {
+    try {
+      // Retail Recommendations (Predict) keyed to the shared visitor id. Returns null until
+      // a rec model is provisioned -> the agent just gets [] and no-ops (no fabricated recs).
+      const ids = await retailPredict({ visitorId, pageSize: 8 });
+      if (!ids || !ids.length) return [];
+      const handles = ids.filter((h) => !cartHandles.has(h)).slice(0, 6);
+      return register(await hydrateProducts(graph, handles, regionId));
+    } catch { return []; }
+  }
 
   // Voice transcription. Browsers disagree on recording format: Chrome/Android emit WebM/Opus
   // (Google STT decodes it; Gemini rejects the webm container), Safari/iOS emit MP4/AAC (STT
@@ -259,6 +276,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
     if (name === "get_product") return await getProductTool(args?.handle);
     if (name === "recommend_complementary") return (await recommendComplementary(args?.handle)).map(slim);
+    if (name === "recommend_for_you") return (await recommendForYou()).map(slim);
     if (name === "visual_search") return (await doVisualSearch()).map(slim);
     if (name === "get_order_status") return await lookupOrderStatus(graph, { order: args?.order, email: args?.email });
     return { error: "unknown tool" };

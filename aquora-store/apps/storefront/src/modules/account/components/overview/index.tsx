@@ -2,6 +2,7 @@ import { Container } from "@modules/common/components/ui"
 
 import ChevronDown from "@modules/common/icons/chevron-down"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import RecommendedRail from "@modules/home/components/recommended-rail"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 
@@ -131,6 +132,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
           </div>
         </div>
       </div>
+      {/* Personalised "for you" rail — Retail Recommendations when a model is live, an honest
+          content mix until then; self-hides under 3 items. Shows on all viewports. */}
+      <RecommendedRail eyebrow="Picked for you" title="Recommended for you" surface="home" />
     </div>
   )
 }
