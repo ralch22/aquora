@@ -11,7 +11,7 @@ export default function SiteJsonLd() {
     "@type": "Organization",
     name: brand.name,
     url: base,
-    logo: `${base}/favicon.ico`,
+    logo: `${base}/logo.svg`,
     description: brand.positioning,
     email: contact.email,
     ...(hasRealPhone ? { telephone: contact.phone } : {}),
@@ -47,10 +47,40 @@ export default function SiteJsonLd() {
     },
   }
 
+  // LocalBusiness (Store) node — powers the local/knowledge surfaces. Address + hours come from
+  // brand.ts; telephone stays gated on hasRealPhone so the all-zeros placeholder never renders,
+  // and geo is deliberately omitted (no confirmed coordinates — never fabricate a map pin).
+  const localBusiness = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "@id": `${base}/#store`,
+    name: brand.name,
+    url: base,
+    image: `${base}/logo.svg`,
+    logo: `${base}/logo.svg`,
+    description: brand.positioning,
+    email: contact.email,
+    ...(hasRealPhone ? { telephone: contact.phone } : {}),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Dubai Investment Park",
+      addressLocality: "Dubai",
+      addressCountry: "AE",
+    },
+    areaServed: "United Arab Emirates",
+    priceRange: "$$",
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+      opens: "08:00",
+      closes: "18:00",
+    },
+  }
+
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify([organization, website]) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify([organization, website, localBusiness]) }}
     />
   )
 }
