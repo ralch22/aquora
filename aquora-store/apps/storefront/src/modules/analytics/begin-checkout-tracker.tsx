@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { trackBeginCheckout } from "@lib/analytics"
 import { updateCart } from "@lib/data/cart"
+import { getVisitorId } from "@lib/aquora/retail-track"
 
 type Item = { id: string; name: string; price?: number; quantity?: number }
 
@@ -25,9 +26,16 @@ export default function BeginCheckoutTracker({
 }) {
   useEffect(() => {
     trackBeginCheckout({ value, items })
+    // Stamp the GA client id AND the Ask-Aqua / Retail visitor id (aq_vid) onto the cart so
+    // both propagate to order.metadata: ga_client_id for server-side GA4 purchase attribution,
+    // aq_vid for the assisted-conversion join (order.placed -> last assistant conversation).
     const cid = gaClientId()
-    if (cid) {
-      updateCart({ metadata: { ga_client_id: cid } } as any).catch(() => {})
+    const vid = getVisitorId()
+    const metadata: Record<string, string> = {}
+    if (cid) metadata.ga_client_id = cid
+    if (vid && vid !== "anon") metadata.aq_vid = vid
+    if (Object.keys(metadata).length) {
+      updateCart({ metadata } as any).catch(() => {})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
