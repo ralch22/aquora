@@ -23,10 +23,12 @@ export default function RecommendedRail({
   eyebrow = "For you",
   title = "Recommended for you",
   handle,
+  surface,
 }: {
   eyebrow?: string
   title?: string
   handle?: string
+  surface?: string
 }) {
   const params = useParams()
   const countryCode =
@@ -40,12 +42,12 @@ export default function RecommendedRail({
     if (!handle) trackRetailEvent("home-page-view")
     const url = `${base}/store/recommend?v=${encodeURIComponent(getVisitorId())}${
       handle ? `&handle=${encodeURIComponent(handle)}` : ""
-    }`
+    }${surface ? `&surface=${encodeURIComponent(surface)}` : ""}`
     fetch(url, { headers: { "x-publishable-api-key": key } })
       .then((r) => (r.ok ? r.json() : { products: [] }))
       .then((d) => setItems(Array.isArray(d.products) ? d.products.slice(0, 10) : []))
       .catch(() => {})
-  }, [handle])
+  }, [handle, surface])
 
   if (items.length < 3) return null
 

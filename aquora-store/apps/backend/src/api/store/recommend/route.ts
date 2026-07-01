@@ -8,6 +8,15 @@ function sanitizeFacet(s: string): string {
   return String(s || "").replace(/[^\p{L}\p{N}\s\-_.&/]/gu, "").trim();
 }
 
+// Resolve a per-surface recommendation serving config, falling back to the single shared
+// RETAIL_REC_SERVING model (and to undefined when nothing is provisioned -> content fallback).
+function pickRecServingConfig(surface: string): string | undefined {
+  const e = process.env;
+  if (surface === "cart") return e.RETAIL_REC_SERVING_CART || e.RETAIL_REC_SERVING_PDP || e.RETAIL_REC_SERVING || undefined;
+  if (surface === "pdp") return e.RETAIL_REC_SERVING_PDP || e.RETAIL_REC_SERVING || undefined;
+  return e.RETAIL_REC_SERVING_HOME || e.RETAIL_REC_SERVING || undefined;
+}
+
 // Phase 2: recommendation panel. Tries Google Retail Recommendations (Predict) for true
 // personalisation when a rec serving config is provisioned (RETAIL_REC_SERVING); otherwise
 // falls back to an honest content heuristic — complementary categories for a product context
@@ -17,6 +26,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const visitorId = String(req.query.v || "anon").slice(0, 64);
   const handle = req.query.handle ? String(req.query.handle) : undefined;
   const limit = Math.max(2, Math.min(12, parseInt(String(req.query.limit || "8"), 10) || 8));
+  // Surface hint lets the owner point each placement at the RIGHT Retail model type
+  // (home "Recommended for You" vs PDP "Others You May Like" vs cart "Frequently Bought
+  // Together"). Falls back to the single RETAIL_REC_SERVING model when the per-surface
+  // vars aren't set, so one model still personalises every surface.
+  const surface = String(req.query.surface || (handle ? "pdp" : "home"));
+  const servingConfigId = pickRecServingConfig(surface);
 
   let regionId: string | undefined;
   try {
@@ -30,6 +45,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     eventType: handle ? "detail-page-view" : "home-page-view",
     contextHandle: handle,
     pageSize: limit + 2,
+    servingConfigId,
   });
   let source = "retail-predict";
 

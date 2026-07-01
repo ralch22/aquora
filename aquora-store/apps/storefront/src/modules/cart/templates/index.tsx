@@ -98,6 +98,7 @@ const CartTemplate = ({
           eyebrow="You may also need"
           title="Complete your setup"
           handle={contextHandle}
+          surface="cart"
         />
       ) : null}
     </div>
