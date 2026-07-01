@@ -186,7 +186,7 @@ const Shipping: React.FC<ShippingProps> = ({
       </div>
       {isOpen ? (
         <>
-          <div className="grid">
+          <div className="grid aq-step-in">
             <div className="flex flex-col">
               <span className="font-medium txt-medium text-aquora-ink">
                 Shipping method
@@ -214,7 +214,7 @@ const Shipping: React.FC<ShippingProps> = ({
                       value={PICKUP_OPTION_ON}
                       data-testid="delivery-option-radio"
                       className={clx(
-                        "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20",
+                        "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px active:scale-[0.99] active:translate-y-0",
                         {
                           "border-aquora-primary":
                             showPickupOptions === PICKUP_OPTION_ON,
@@ -256,7 +256,7 @@ const Shipping: React.FC<ShippingProps> = ({
                         data-testid="delivery-option-radio"
                         disabled={isDisabled}
                         className={clx(
-                          "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20",
+                          "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px active:scale-[0.99] active:translate-y-0",
                           {
                             "border-aquora-primary":
                               option.id === shippingMethodId,
@@ -331,7 +331,7 @@ const Shipping: React.FC<ShippingProps> = ({
                           disabled={option.insufficient_inventory}
                           data-testid="delivery-option-radio"
                           className={clx(
-                            "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20",
+                            "flex items-center justify-between text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 hover:border-aquora-primary ring-1 ring-aquora-primary/20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px active:scale-[0.99] active:translate-y-0",
                             {
                               "border-aquora-primary":
                                 option.id === shippingMethodId,

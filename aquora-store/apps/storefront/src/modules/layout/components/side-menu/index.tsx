@@ -61,14 +61,14 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
               <Transition
                 show={open}
                 as={Fragment}
-                enter="transition ease-out duration-150"
-                enterFrom="opacity-0"
-                enterTo="opacity-100 backdrop-blur-2xl"
+                enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-200"
+                enterFrom="opacity-0 -translate-x-4"
+                enterTo="opacity-100 translate-x-0 backdrop-blur-2xl"
                 leave="transition ease-in duration-150"
-                leaveFrom="opacity-100 backdrop-blur-2xl"
-                leaveTo="opacity-0"
+                leaveFrom="opacity-100 translate-x-0 backdrop-blur-2xl"
+                leaveTo="opacity-0 -translate-x-4"
               >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-white m-2">
+                <PopoverPanel className="aq-slidein flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-white m-2">
                   <div
                     data-testid="nav-menu-popup"
                     className="flex flex-col h-full bg-gradient-to-br from-aquora-secondary to-aquora-primary rounded-large justify-between p-6 overflow-y-auto"
