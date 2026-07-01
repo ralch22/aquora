@@ -6,7 +6,7 @@ Aquora delivers genuine, engineered pool, spa, pond and fountain equipment acros
 We deliver throughout the United Arab Emirates and to the GCC (Saudi Arabia, Qatar, Kuwait, Bahrain and Oman). If you're unsure whether we can reach your location, contact us before ordering.
 
 ## 2. Delivery charges
-A flat delivery charge of **AED 30** applies to standard orders within the UAE, shown at checkout. Charges for heavy, oversized or GCC deliveries may vary and will be confirmed at checkout or by our team.
+Delivery within the UAE is **free on orders over AED 500**. For orders below that threshold, a flat **AED 30** delivery charge applies, shown at checkout. Charges for heavy, oversized or GCC deliveries may vary and will be confirmed at checkout or by our team.
 
 ## 3. Delivery times
 Most in-stock orders are delivered within **2–4 working days** across the UAE. Larger items, special orders and GCC deliveries may take longer. We'll keep you updated and contact you if anything affects your delivery date.
