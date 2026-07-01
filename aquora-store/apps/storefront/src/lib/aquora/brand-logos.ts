@@ -15,6 +15,12 @@ export const brandLogos: Record<string, string> = {
   Polaris: "/brand-logos/polaris.png",
   Elecro: "/brand-logos/elecro.svg",
   Atecpool: "/brand-logos/atecpool.png",
+  "Rosa Gres": "/brand-logos/rosa-gres.png",
+  Renolit: "/brand-logos/renolit.svg",
+  Soprema: "/brand-logos/soprema.webp",
+  Aquavia: "/brand-logos/aquavia.svg",
+  Sundance: "/brand-logos/sundance.png",
+  Teclumen: "/brand-logos/teclumen.png",
 }
 
 export function brandLogo(name: string): string | undefined {
