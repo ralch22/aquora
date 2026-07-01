@@ -37,6 +37,9 @@ modules.push({ resolve: './src/modules/qa' })
 // fire-and-forget for transcripts + assisted-conversion attribution.
 modules.push({ resolve: './src/modules/assistant' })
 
+// Newsletter capture (owned marketing list) — footer signup writes here via /store/newsletter.
+modules.push({ resolve: './src/modules/newsletter' })
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
