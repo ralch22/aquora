@@ -61,6 +61,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       productCategory.description ??
       `${productCategory.name} — engineered pool, spa and fountain equipment from Aquora, delivered across the UAE and the GCC.`
 
+    // Branded share card served by /og/category/[handle] (a colocated opengraph-image
+    // file is impossible inside this catch-all segment). Relative URL resolves against
+    // the root layout's metadataBase.
+    const leafHandle = params.category[params.category.length - 1]
+    const ogImage = {
+      url: `/og/category/${leafHandle}`,
+      width: 1200,
+      height: 630,
+      alt: `${productCategory.name} at Aquora`,
+    }
+
     return {
       title: `${productCategory.name} | Aquora`,
       description: description.slice(0, 160),
@@ -68,6 +79,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
         `/categories/${params.category.join("/")}`,
         params.countryCode
       ),
+      openGraph: {
+        title: `${productCategory.name} | Aquora`,
+        description: description.slice(0, 160),
+        type: "website",
+        images: [ogImage],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${productCategory.name} | Aquora`,
+        description: description.slice(0, 160),
+        images: [ogImage.url],
+      },
     }
   } catch {
     notFound()

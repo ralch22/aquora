@@ -27,8 +27,23 @@ export const metadata: Metadata = {
     title: "Aquora — Engineered Pool, Spa & Fountain Equipment",
     description:
       "Genuinely engineered pool, spa, pond and fountain equipment, stocked and supported across the UAE & GCC.",
-    images: [{ url: "/images/brand/og.webp", width: 1200, height: 675 }],
+    // Branded hero card (pool photo + wordmark) — JPEG for maximum crawler support.
+    images: [
+      {
+        url: "/images/brand/og-hero.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Aquora — engineered for water that lasts",
+      },
+    ],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aquora — Engineered Pool, Spa & Fountain Equipment",
+    description:
+      "Genuinely engineered pool, spa, pond and fountain equipment, stocked and supported across the UAE & GCC.",
+    images: ["/images/brand/og-hero.jpg"],
   },
 }
 

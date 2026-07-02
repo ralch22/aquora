@@ -280,10 +280,17 @@ const Shipping: React.FC<ShippingProps> = ({
                         </div>
                         <span className="justify-self-end text-aquora-ink">
                           {option.price_type === "flat" ? (
-                            convertToLocale({
-                              amount: option.amount!,
-                              currency_code: cart?.currency_code,
-                            })
+                            // item_total price rule resolves to 0 for carts >= AED 500
+                            option.amount === 0 ? (
+                              <span className="font-semibold text-aquora-primary">
+                                Free
+                              </span>
+                            ) : (
+                              convertToLocale({
+                                amount: option.amount!,
+                                currency_code: cart?.currency_code,
+                              })
+                            )
                           ) : calculatedPricesMap[option.id] ? (
                             convertToLocale({
                               amount: calculatedPricesMap[option.id],
@@ -398,10 +405,12 @@ const Shipping: React.FC<ShippingProps> = ({
                 </Text>
                 <Text className="txt-medium text-aquora-muted">
                   {cart.shipping_methods!.at(-1)!.name}{" "}
-                  {convertToLocale({
-                    amount: cart.shipping_methods!.at(-1)!.amount!,
-                    currency_code: cart?.currency_code,
-                  })}
+                  {cart.shipping_methods!.at(-1)!.amount === 0
+                    ? "Free"
+                    : convertToLocale({
+                        amount: cart.shipping_methods!.at(-1)!.amount!,
+                        currency_code: cart?.currency_code,
+                      })}
                 </Text>
               </div>
             )}
