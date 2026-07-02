@@ -29,7 +29,8 @@ export default async function freeShippingOver500({ container }: ExecArgs) {
     filters: { name: "Standard Delivery" },
   })
 
-  const option = options?.[0]
+  // graph result types don't surface joined price fields — treat as loose data
+  const option = options?.[0] as any
   if (!option) {
     console.error("Shipping option 'Standard Delivery' not found — run import-catalog first.")
     return
