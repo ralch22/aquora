@@ -105,6 +105,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Extensionless metadata/image routes: the root OG/Twitter cards and the /og/*
+  // share-card handlers live outside the country prefix — redirecting them to
+  // /{country}/… would 404 and break every social share preview.
+  const { pathname } = request.nextUrl
+  if (
+    pathname === "/opengraph-image" ||
+    pathname === "/twitter-image" ||
+    pathname.startsWith("/og/")
+  ) {
+    return NextResponse.next()
+  }
+
   const cacheIdCookie = request.cookies.get("_medusa_cache_id")
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 

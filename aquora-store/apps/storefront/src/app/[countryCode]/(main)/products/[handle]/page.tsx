@@ -104,6 +104,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     params.countryCode
   )
 
+  // Real product photo beats a generic card on shares. Twitter images are set explicitly —
+  // without them X falls back to the site-wide /twitter-image card instead of the product.
+  // No thumbnail → omit images so the route inherits the branded default OG card.
+  const ogImages = product.thumbnail
+    ? [{ url: product.thumbnail, alt: product.title }]
+    : undefined
+
   return {
     title: `${product.title} | Aquora`,
     description: metaDescription,
@@ -112,7 +119,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       title: `${product.title} | Aquora`,
       description: metaDescription,
       url: alternates.canonical as string,
-      images: product.thumbnail ? [product.thumbnail] : [],
+      type: "website",
+      ...(ogImages ? { images: ogImages } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.title} | Aquora`,
+      description: metaDescription,
+      ...(ogImages ? { images: ogImages } : {}),
     },
   }
 }

@@ -6,8 +6,9 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import StoreTemplate from "@modules/store/templates"
 
 export const metadata: Metadata = {
-  title: "Store",
-  description: "Explore all of our products.",
+  title: "Shop All Pool, Spa & Fountain Equipment | Aquora",
+  description:
+    "Browse Aquora's full catalogue of engineered pool, spa, pond and fountain equipment — pumps, filtration, heating, lighting, chemicals and more, delivered across the UAE & GCC.",
 }
 
 type StorePageSearchParams = Record<string, string | string[] | undefined> & {
